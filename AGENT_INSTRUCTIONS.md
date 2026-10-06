@@ -20,5 +20,13 @@ Si eres un asistente de IA (ej. Gemini, Copilot, Cursor, Claude) ayudando a desa
 - **Actualización Documental**: Si añades un nuevo comando, variable de entorno obligatoria o cambias drásticamente la infraestructura, debes actualizar el `README.md` y `.env.example` según corresponda.
 - Evita incluir configuraciones locales o secretos reales en los repositorios.
 
+## 5. UI/UX y Actualizaciones Optimistas
+- **Frameworks visuales**: Prioriza Tailwind CSS, Shadcn/UI y Framer Motion para micro-animaciones (level ups, XP).
+- **Optimistic Updates**: Toda acción en la interfaz debe sentirse instantánea, asumiendo el éxito en el frontend antes de la respuesta del servidor.
+
+## 6. SaaS Multi-Tenant y Escalabilidad
+- **Tenancy Obligatorio**: Toda entidad transaccional debe tener un `TenantId` o `WorkspaceId`. Filtra siempre por Tenant en el Backend.
+- **Backend Estricto**: Usa siempre paginación para las listas, DTOs cerrados, y valida todo input con FluentValidation. Piensa siempre en dónde agregar caché (ej. Redis) para consultas costosas.
+
 ## Resumen del Comportamiento Esperado
 *Evalúa el impacto de tu código, aísla la lógica, pruébalo automáticamente y tradúcelo. La calidad del código en Sparnarok debe ser Legendaria (Rango S).*
