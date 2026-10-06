@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { QuestBoard } from './features/quests/components/QuestBoard';
 import './i18n'; // Ensure i18n is initialized
 
