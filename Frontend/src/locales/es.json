@@ -32,5 +32,11 @@
     "questAction": "completó 'Migrar DB' (+100 XP)",
     "questActionNew": "completaste una Quest épica",
     "levelAction": "subió a Rango 3 en Backend"
+  },
+  "dashboard": {
+    "title": "Manager Analytics",
+    "subtitle": "Huella técnica y rendimiento de tu Party.",
+    "radarTitle": "Distribución de Habilidades del Equipo",
+    "topHeroes": "Top Performers (30 Días)"
   }
 }

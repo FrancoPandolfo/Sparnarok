@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { QuestBoard } from './features/quests/components/QuestBoard';
 import { ProfilePage } from './pages/ProfilePage';
+import { DashboardPage } from './pages/DashboardPage';
 import { useQuestStore } from './features/quests/useQuestStore';
-import { User, Swords, Users } from 'lucide-react';
+import { User, Swords, Users, BarChart } from 'lucide-react';
 import { InvitePaywallModal } from './features/parties/components/InvitePaywallModal';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +44,9 @@ function Layout({ children }: { children: React.ReactNode }) {
             <Link to="/profile" className={`flex items-center gap-2 pb-1 ${location.pathname === '/profile' ? 'text-amber-400 border-b-2 border-amber-400' : 'text-gray-400 hover:text-white'}`}>
               <User size={18}/> Perfil Habilidades
             </Link>
+            <Link to="/party/dashboard" className={`flex items-center gap-2 pb-1 ${location.pathname === '/party/dashboard' ? 'text-amber-400 border-b-2 border-amber-400' : 'text-gray-400 hover:text-white'}`}>
+              <BarChart size={18}/> Analytics
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-6">
@@ -82,6 +86,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<QuestBoard />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/party/dashboard" element={<DashboardPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>
