@@ -32,7 +32,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x' # Ajustar a la versión exacta de .NET si es diferente
+          dotnet-version: '10.0.x'
 
       - name: Restore Backend Dependencies
         working-directory: ./Backend
@@ -59,7 +59,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: ./Frontend/package-lock.json
 

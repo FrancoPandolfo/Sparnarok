@@ -39,4 +39,18 @@ public class QuestsController : ControllerBase
     {
         return Ok();
     }
+
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateQuestStatusDto request, [FromQuery] Guid userId)
+    {
+        try
+        {
+            var quest = await _questService.UpdateQuestStatusAsync(id, request.State, userId);
+            return Ok(quest);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

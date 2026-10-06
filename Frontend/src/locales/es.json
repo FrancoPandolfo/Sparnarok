@@ -7,6 +7,14 @@
       "submitBtn": "Crear Quest",
       "successMsg": "¡Quest forjada con éxito!",
       "errorMsg": "Fallo al forjar la quest."
+    },
+    "board": {
+      "columns": {
+        "pending": "Pendiente",
+        "inProgress": "En Progreso",
+        "completed": "Completada"
+      },
+      "xpGained": "¡+{{xp}} XP Ganada!"
     }
   }
 }

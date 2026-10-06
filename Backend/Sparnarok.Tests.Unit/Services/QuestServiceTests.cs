@@ -53,4 +53,37 @@ public class QuestServiceTests
         var savedQuest = await context.Quests.Include(q => q.Rewards).FirstOrDefaultAsync(q => q.Id == result.Id);
         savedQuest.Should().NotBeNull();
     }
+
+    [Fact]
+    public async Task UpdateQuestStatusAsync_ToCompleted_ShouldAddXpToUser()
+    {
+        // Arrange
+        using var context = GetDbContext();
+        var service = new QuestService(context);
+        
+        var userId = Guid.NewGuid();
+        var user = new Sparnarok.Core.Entities.User { Id = userId, Username = "Hero", TotalXp = 10 };
+        context.Users.Add(user);
+
+        var quest = new Sparnarok.Core.Entities.Quest
+        {
+            Id = Guid.NewGuid(),
+            Title = "Defeat Bug",
+            State = QuestState.InProgress,
+            Rewards = new List<Sparnarok.Core.Entities.QuestReward>
+            {
+                new Sparnarok.Core.Entities.QuestReward { SkillCategoryId = Guid.NewGuid(), XpAmount = 50 }
+            }
+        };
+        context.Quests.Add(quest);
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await service.UpdateQuestStatusAsync(quest.Id, QuestState.Completed, userId);
+
+        // Assert
+        result.State.Should().Be(QuestState.Completed);
+        var updatedUser = await context.Users.FindAsync(userId);
+        updatedUser!.TotalXp.Should().Be(60); // 10 base + 50 reward
+    }
 }
