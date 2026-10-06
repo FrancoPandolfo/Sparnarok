@@ -16,5 +16,10 @@
       },
       "xpGained": "¡+{{xp}} XP Ganada!"
     }
+  },
+  "paywall": {
+    "title": "Ascensión Pro Requerida",
+    "description": "Esta rama de habilidades pertenece a la capa de Arquitectura Avanzada. Solicita a tu Workspace Manager un upgrade al plan Pro para desbloquear el poder absoluto.",
+    "upgradeButton": "Actualizar a Pro"
   }
 }

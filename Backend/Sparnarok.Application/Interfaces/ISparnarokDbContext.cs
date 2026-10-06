@@ -11,6 +11,7 @@ public interface ISparnarokDbContext
     DbSet<Quest> Quests { get; set; }
     DbSet<SkillCategory> SkillCategories { get; set; }
     DbSet<QuestReward> QuestRewards { get; set; }
+    DbSet<UserSkillProgression> UserSkillProgressions { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

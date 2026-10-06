@@ -14,4 +14,5 @@ public class SparnarokDbContext : DbContext, ISparnarokDbContext
     public DbSet<Quest> Quests { get; set; }
     public DbSet<SkillCategory> SkillCategories { get; set; }
     public DbSet<QuestReward> QuestRewards { get; set; }
+    public DbSet<UserSkillProgression> UserSkillProgressions { get; set; }
 }
