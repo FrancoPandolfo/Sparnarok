@@ -4,6 +4,7 @@ import type { Quest, CreateQuestPayload } from './types';
 
 interface QuestStoreState {
   quests: Quest[];
+  userXp: number;
   isLoading: boolean;
   error: string | null;
   
@@ -35,6 +36,7 @@ const initialMockQuests: Quest[] = [
 
 export const useQuestStore = create<QuestStoreState>((set, get) => ({
   quests: initialMockQuests,
+  userXp: 0,
   isLoading: false,
   error: null,
 
@@ -42,8 +44,17 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
 
   updateQuestState: async (id: string, newState: QuestState, userId: string) => {
     const previousQuests = get().quests;
+    const previousXp = get().userXp;
+    const quest = previousQuests.find(q => q.id === id);
+    
+    let xpGained = 0;
+    if (newState === QuestState.Completed && quest && quest.state !== QuestState.Completed) {
+      xpGained = quest.rewards?.reduce((acc, r) => acc + r.xpAmount, 0) || 0;
+    }
+
     set(state => ({
-      quests: state.quests.map(q => q.id === id ? { ...q, state: newState } : q)
+      quests: state.quests.map(q => q.id === id ? { ...q, state: newState } : q),
+      userXp: state.userXp + xpGained
     }));
     
     try {
@@ -54,7 +65,7 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
       });
       if (!response.ok) throw new Error('API Error');
     } catch (e) {
-      set({ quests: previousQuests });
+      set({ quests: previousQuests, userXp: previousXp });
     }
   },
 
