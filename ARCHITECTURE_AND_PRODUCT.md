@@ -7,8 +7,9 @@ Sparnarok no es una herramienta de gestión tradicional; es un juego. La interfa
 
 - **Stack Visual Frontend**:
   - **Tailwind CSS**: Para utilidad y consistencia de diseño ágil.
+  - **React Flow (@xyflow/react)**: Para renderizar de manera interactiva el Árbol de Habilidades (estilo constelación).
   - **Shadcn/UI**: Como base de componentes accesibles y altamente personalizables.
-  - **Framer Motion**: Obligatorio para animaciones de estado (ganancia de XP, level-ups, micro-interacciones al completar una Quest).
+  - **Framer Motion**: Obligatorio para animaciones de estado (ganancia de XP, level-ups, micro-interacciones al completar una Quest y popups de monetización).
 - **Optimistic Updates**: Todas las interacciones principales (ej. cambiar el estado de una Quest a Completada) deben reflejarse inmediatamente en el estado del cliente (UI) asumiendo éxito, revertiendo los cambios solo si el servidor falla. Esto garantiza una sensación de inmediatez y ritmo de juego.
 
 ## 🏢 2. Estructura para Monetización (SaaS B2B/B2C)
@@ -18,6 +19,7 @@ El sistema debe estar diseñado para escalar financieramente y organizativamente
   - El Backend debe asegurar el filtrado de datos por Tenant utilizando **Global Query Filters** en Entity Framework Core.
 - **Modelo Freemium**: 
   - **Capa Gratuita**: Diseñar la base para establecer límites (ej. 5 usuarios por Workspace, 50 Quests activas mensuales).
+  - **Paywalls Interactivos**: El árbol de habilidades sirve como gancho de ventas B2B; las ramas de habilidades avanzadas (Premium) son visibles pero están bloqueadas, mostrando un modal de "Upgrade al plan Pro" al intentarlo.
   - La arquitectura debe soportar *Feature Flags* para habilitar funcionalidades Premium basadas en el plan del Tenant.
   - Módulos Aislados: Preparar el terreno para integraciones de pago (Stripe/Paddle) aislando toda lógica de facturación en un `BillingService` o módulo de dominio separado.
 

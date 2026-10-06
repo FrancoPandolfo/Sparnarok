@@ -1,6 +1,6 @@
 # ⚔️ Sparnarok
 
-**Sparnarok** es un gestor de flujos de trabajo gamificado que reemplaza el tradicional tablero Kanban por un sistema de progresión basado en mecánicas de juegos de rol (RPG). Convierte las tareas rutinarias en *Quests*, permitiendo a los usuarios ganar experiencia (XP) y subir de nivel en disciplinas técnicas a través de un árbol de habilidades.
+**Sparnarok** es un gestor de flujos de trabajo gamificado que reemplaza el tradicional tablero Kanban por un sistema de progresión basado en mecánicas de juegos de rol (RPG). Convierte las tareas rutinarias en *Quests*, permitiendo a los usuarios ganar experiencia (XP) y desbloquear nodos visuales en un **Árbol de Habilidades Interactivo**. Incluye mecánicas de monetización B2B integradas (Paywalls en la UI).
 
 ## 📁 Estructura del Proyecto
 
@@ -23,8 +23,8 @@ Sparnarok/
 ## 🛠️ Requisitos Previos
 
 - **Docker** y **Docker Compose** (para levantar PostgreSQL fácilmente).
-- **.NET SDK 8.0** o superior.
-- **Node.js 20.x** o superior y **npm**.
+- **.NET SDK 10.0** o superior.
+- **Node.js 22.x** o superior y **npm**.
 
 ## 🚀 Entorno de Desarrollo Local
 
