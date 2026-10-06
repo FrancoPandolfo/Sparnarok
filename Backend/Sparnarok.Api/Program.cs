@@ -18,6 +18,7 @@ builder.Services.AddDbContext<SparnarokDbContext>(options =>
 builder.Services.AddScoped<ISparnarokDbContext>(provider => provider.GetRequiredService<SparnarokDbContext>());
 builder.Services.AddScoped<IQuestService, QuestService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<ITenantService, TenantService>();
 
 var app = builder.Build();
 

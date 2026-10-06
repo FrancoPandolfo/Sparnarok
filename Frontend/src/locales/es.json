@@ -21,5 +21,16 @@
     "title": "Ascensión Pro Requerida",
     "description": "Esta rama de habilidades pertenece a la capa de Arquitectura Avanzada. Solicita a tu Workspace Manager un upgrade al plan Pro para desbloquear el poder absoluto.",
     "upgradeButton": "Actualizar a Pro"
+  },
+  "invitePaywall": {
+    "title": "Límite de Party Alcanzado",
+    "description": "Tu Party actual está en el plan Gratuito y ha alcanzado el límite de 3 miembros. Haz un upgrade al plan Pro para reclutar aliados ilimitados.",
+    "upgradeButton": "Actualizar a Pro"
+  },
+  "feed": {
+    "title": "Actividad de la Party",
+    "questAction": "completó 'Migrar DB' (+100 XP)",
+    "questActionNew": "completaste una Quest épica",
+    "levelAction": "subió a Rango 3 en Backend"
   }
 }

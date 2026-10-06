@@ -10,6 +10,12 @@ namespace Sparnarok.Tests.Unit.Services;
 
 public class ProfileServiceTests
 {
+    private class FakeTenantService : ITenantService
+    {
+        public System.Guid GetCurrentPartyId() => System.Guid.Empty;
+        public void SetCurrentPartyId(System.Guid partyId) {}
+    }
+
     private DbContextOptions<SparnarokDbContext> CreateNewContextOptions()
     {
         return new DbContextOptionsBuilder<SparnarokDbContext>()
@@ -22,7 +28,7 @@ public class ProfileServiceTests
     {
         // Arrange
         var options = CreateNewContextOptions();
-        using var context = new SparnarokDbContext(options);
+        using var context = new SparnarokDbContext(options, new FakeTenantService());
 
         var userId = System.Guid.NewGuid();
         context.Users.Add(new User { Id = userId, Username = "Test", Email = "test@test.com", TotalXp = 350 });

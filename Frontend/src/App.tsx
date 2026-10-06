@@ -2,12 +2,27 @@ import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-do
 import { QuestBoard } from './features/quests/components/QuestBoard';
 import { ProfilePage } from './pages/ProfilePage';
 import { useQuestStore } from './features/quests/useQuestStore';
-import { User, Swords } from 'lucide-react';
+import { User, Swords, Users } from 'lucide-react';
+import { InvitePaywallModal } from './features/parties/components/InvitePaywallModal';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './i18n'; 
 
 function Layout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const userXp = useQuestStore(state => state.userXp);
   const location = useLocation();
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [currentParty, setCurrentParty] = useState('party1');
+  
+  const handleInvite = () => {
+    // Simulating API call that returns ERR_PARTY_LIMIT_REACHED
+    if (currentParty === 'party1') {
+      setShowInviteModal(true);
+    } else {
+      alert("Invitación enviada");
+    }
+  };
   
   const getRank = (xp: number) => {
     if (xp < 100) return 'Novato';
@@ -30,16 +45,32 @@ function Layout({ children }: { children: React.ReactNode }) {
             </Link>
           </nav>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="text-sm font-bold text-amber-400">XP: {userXp}</div>
-          <div className="text-sm font-semibold text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
-            Rank: {getRank(userXp)}
+        <div className="flex items-center gap-6">
+          <select 
+            value={currentParty}
+            onChange={(e) => setCurrentParty(e.target.value)}
+            className="bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg focus:ring-amber-500 focus:border-amber-500 block p-2"
+          >
+            <option value="party1">Gremio Frontend (Free)</option>
+            <option value="party2">Ops Team (Pro)</option>
+          </select>
+          <button onClick={handleInvite} className="bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm px-3 py-1.5 rounded-lg font-bold border border-gray-700 flex items-center gap-2 transition-colors">
+            <Users size={16} /> {t('header.invite', 'Invitar')}
+          </button>
+          
+          <div className="flex items-center gap-4 border-l border-gray-700 pl-6">
+            <div className="text-sm font-bold text-amber-400">XP: {userXp}</div>
+            <div className="text-sm font-semibold text-gray-400 bg-gray-800 px-3 py-1 rounded-full border border-gray-700">
+              Rank: {getRank(userXp)}
+            </div>
           </div>
         </div>
       </header>
       <main className="flex-1 overflow-hidden h-[calc(100vh-73px)]">
         {children}
       </main>
+      
+      {showInviteModal && <InvitePaywallModal onClose={() => setShowInviteModal(false)} />}
     </div>
   );
 }

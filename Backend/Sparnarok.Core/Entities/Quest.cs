@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using Sparnarok.Core.Enums;
+using Sparnarok.Core.Interfaces;
 
 namespace Sparnarok.Core.Entities;
 
-public class Quest
+public class Quest : IMustHaveParty
 {
     public Guid Id { get; set; }
+    public Guid PartyId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public QuestDifficulty Difficulty { get; set; }
