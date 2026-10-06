@@ -21,5 +21,16 @@
     "title": "Pro Ascension Required",
     "description": "This skill branch belongs to the Advanced Architecture tier. Ask your Workspace Manager to upgrade to the Pro plan to unlock ultimate power.",
     "upgradeButton": "Upgrade to Pro"
+  },
+  "invitePaywall": {
+    "title": "Party Limit Reached",
+    "description": "Your current Party is on the Free plan and has reached the 3-member limit. Upgrade to the Pro plan to recruit unlimited allies.",
+    "upgradeButton": "Upgrade to Pro"
+  },
+  "feed": {
+    "title": "Party Activity",
+    "questAction": "completed 'Migrate DB' (+100 XP)",
+    "questActionNew": "completed an epic Quest",
+    "levelAction": "leveled up to Rank 3 in Backend"
   }
 }

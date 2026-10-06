@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuestStore } from '../useQuestStore';
 import { QuestState } from '../types';
 import { QuestCard } from './QuestCard';
+import { PartyActivityFeed } from '../../parties/components/PartyActivityFeed';
 
 const COLUMNS = [
   { id: QuestState.Pending.toString(), i18nKey: 'quest.board.columns.pending' },
@@ -58,10 +59,11 @@ export const QuestBoard = () => {
 
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex gap-6 h-full flex-grow">
-          {COLUMNS.map((col) => {
-            const colQuests = quests.filter(q => q.state.toString() === col.id);
-            return (
-              <div key={col.id} className="flex flex-col w-1/3 bg-gray-950 rounded-xl p-4">
+          <div className="flex flex-1 gap-6">
+            {COLUMNS.map((col) => {
+              const colQuests = quests.filter(q => q.state.toString() === col.id);
+              return (
+                <div key={col.id} className="flex flex-col flex-1 bg-gray-950 rounded-xl p-4">
                 <h2 className="text-gray-300 font-bold mb-4 uppercase tracking-wider text-sm">
                   {t(col.i18nKey)} ({colQuests.length})
                 </h2>
@@ -82,6 +84,10 @@ export const QuestBoard = () => {
               </div>
             );
           })}
+          </div>
+          <div className="w-80 shrink-0">
+            <PartyActivityFeed />
+          </div>
         </div>
       </DragDropContext>
     </div>

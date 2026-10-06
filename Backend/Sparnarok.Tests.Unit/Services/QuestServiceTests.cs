@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Sparnarok.Application.DTOs;
+using Sparnarok.Application.Interfaces;
 using Sparnarok.Application.Services;
 using Sparnarok.Core.Enums;
 using Sparnarok.Infrastructure.Data;
@@ -14,12 +15,18 @@ namespace Sparnarok.Tests.Unit.Services;
 
 public class QuestServiceTests
 {
+    private class FakeTenantService : ITenantService
+    {
+        public Guid GetCurrentPartyId() => Guid.Empty;
+        public void SetCurrentPartyId(Guid partyId) {}
+    }
+
     private SparnarokDbContext GetDbContext()
     {
         var options = new DbContextOptionsBuilder<SparnarokDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        return new SparnarokDbContext(options);
+        return new SparnarokDbContext(options, new FakeTenantService());
     }
 
     [Fact]
