@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="Sparnarok.Api/Sparnarok.Api.csproj" />
+  <Project Path="Sparnarok.Application/Sparnarok.Application.csproj" />
+  <Project Path="Sparnarok.Core/Sparnarok.Core.csproj" />
+  <Project Path="Sparnarok.Infrastructure/Sparnarok.Infrastructure.csproj" />
+  <Project Path="Sparnarok.Tests.E2E/Sparnarok.Tests.E2E.csproj" />
+  <Project Path="Sparnarok.Tests.Unit/Sparnarok.Tests.Unit.csproj" />
+</Solution>

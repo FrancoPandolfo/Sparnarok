@@ -1,0 +1,82 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+      - qa
+
+jobs:
+  backend-ci:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: sparnarok_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x' # Ajustar a la versión exacta de .NET si es diferente
+
+      - name: Restore Backend Dependencies
+        working-directory: ./Backend
+        run: dotnet restore
+
+      - name: Build Backend
+        working-directory: ./Backend
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run Unit Tests
+        working-directory: ./Backend
+        env:
+          ConnectionStrings__DefaultConnection: Host=localhost;Database=sparnarok_test;Username=postgres;Password=password
+        run: dotnet test Sparnarok.Tests.Unit/Sparnarok.Tests.Unit.csproj --no-build --configuration Release --logger trx
+
+  frontend-ci:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./Frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: ./Frontend
+        run: npm ci
+
+      - name: Run Linter
+        working-directory: ./Frontend
+        # Vitest create command no incluye lint configurado estrictamente por default, pero es buena práctica asumiendo que lo tienes.
+        run: npm run lint --if-present
+
+      - name: Run Frontend Tests
+        working-directory: ./Frontend
+        # Agregamos --run para que Vitest se ejecute una vez y termine en modo CI
+        run: npm run test -- --run 
+
+      - name: Build Frontend
+        working-directory: ./Frontend
+        run: npm run build

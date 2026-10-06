@@ -1,0 +1,12 @@
+{
+  "quest": {
+    "create": {
+      "title": "Forge a New Quest",
+      "nameLabel": "Quest Name",
+      "descLabel": "Description",
+      "submitBtn": "Create Quest",
+      "successMsg": "Quest forged successfully!",
+      "errorMsg": "Failed to forge quest."
+    }
+  }
+}

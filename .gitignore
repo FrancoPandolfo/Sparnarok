@@ -1,0 +1,55 @@
+# ==============================
+# .NET / C#
+# ==============================
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+# Archivos temporales generados al hacer test
+TestResults/
+
+# ==============================
+# Node.js / React
+# ==============================
+node_modules/
+npm-debug.log
+yarn-error.log
+# Builds y dists
+build/
+dist/
+.vite/
+# Variables de entorno locales
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# Reportes de coverage
+coverage/
+
+# ==============================
+# Sistema Operativo y Extras
+# ==============================
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# ==============================
+# Playwright
+# ==============================
+test-results/
+playwright-report/
+blob-report/

@@ -1,0 +1,12 @@
+{
+  "quest": {
+    "create": {
+      "title": "Forjar una Nueva Quest",
+      "nameLabel": "Nombre de la Quest",
+      "descLabel": "Descripción",
+      "submitBtn": "Crear Quest",
+      "successMsg": "¡Quest forjada con éxito!",
+      "errorMsg": "Fallo al forjar la quest."
+    }
+  }
+}
