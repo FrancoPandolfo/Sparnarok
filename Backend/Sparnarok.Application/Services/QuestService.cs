@@ -71,6 +71,28 @@ public class QuestService : IQuestService
             {
                 var xpGained = quest.Rewards.Sum(r => r.XpAmount);
                 user.TotalXp += xpGained;
+
+                foreach (var reward in quest.Rewards)
+                {
+                    var progression = await _context.UserSkillProgressions
+                        .FirstOrDefaultAsync(p => p.UserId == userId && p.SkillCategoryId == reward.SkillCategoryId);
+                    
+                    if (progression == null)
+                    {
+                        progression = new UserSkillProgression
+                        {
+                            Id = Guid.NewGuid(),
+                            UserId = userId,
+                            SkillCategoryId = reward.SkillCategoryId,
+                            CurrentXp = 0,
+                            Level = 1
+                        };
+                        _context.UserSkillProgressions.Add(progression);
+                    }
+                    
+                    progression.CurrentXp += reward.XpAmount;
+                    progression.Level = 1 + (progression.CurrentXp / 100);
+                }
             }
         }
 

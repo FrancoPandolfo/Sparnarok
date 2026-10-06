@@ -16,5 +16,10 @@
       },
       "xpGained": "+{{xp}} XP Gained!"
     }
+  },
+  "paywall": {
+    "title": "Pro Ascension Required",
+    "description": "This skill branch belongs to the Advanced Architecture tier. Ask your Workspace Manager to upgrade to the Pro plan to unlock ultimate power.",
+    "upgradeButton": "Upgrade to Pro"
   }
 }
