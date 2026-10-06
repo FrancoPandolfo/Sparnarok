@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -25,6 +25,7 @@
     <ProjectReference Include="..\Sparnarok.Application\Sparnarok.Application.csproj" />
     <ProjectReference Include="..\Sparnarok.Core\Sparnarok.Core.csproj" />
     <ProjectReference Include="..\Sparnarok.Infrastructure\Sparnarok.Infrastructure.csproj" />
+    <ProjectReference Include="..\Sparnarok.Api\Sparnarok.Api.csproj" />
   </ItemGroup>
 
 </Project>
