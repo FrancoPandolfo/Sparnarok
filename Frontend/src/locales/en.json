@@ -7,6 +7,14 @@
       "submitBtn": "Create Quest",
       "successMsg": "Quest forged successfully!",
       "errorMsg": "Failed to forge quest."
+    },
+    "board": {
+      "columns": {
+        "pending": "Pending",
+        "inProgress": "In Progress",
+        "completed": "Completed"
+      },
+      "xpGained": "+{{xp}} XP Gained!"
     }
   }
 }

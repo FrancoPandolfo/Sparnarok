@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Sparnarok.Core.Entities;
+using Sparnarok.Application.Interfaces;
 
 namespace Sparnarok.Infrastructure.Data;
 
-public class SparnarokDbContext : DbContext
+public class SparnarokDbContext : DbContext, ISparnarokDbContext
 {
     public SparnarokDbContext(DbContextOptions<SparnarokDbContext> options) : base(options)
     {

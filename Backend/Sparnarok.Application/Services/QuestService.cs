@@ -5,15 +5,15 @@ using Sparnarok.Core.Entities;
 using Sparnarok.Core.Enums;
 using Sparnarok.Application.Interfaces;
 using Sparnarok.Application.DTOs;
-using Sparnarok.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sparnarok.Application.Services;
 
 public class QuestService : IQuestService
 {
-    private readonly SparnarokDbContext _context;
+    private readonly ISparnarokDbContext _context;
 
-    public QuestService(SparnarokDbContext context)
+    public QuestService(ISparnarokDbContext context)
     {
         _context = context;
     }
@@ -47,6 +47,34 @@ public class QuestService : IQuestService
             throw new ApplicationException("Fallo al inscribir la Quest en los registros de Sparnarok.", ex);
         }
 
+        return quest;
+    }
+
+    public async Task<Quest> UpdateQuestStatusAsync(Guid questId, QuestState newState, Guid userId)
+    {
+        var quest = await _context.Quests
+            .Include(q => q.Rewards)
+            .FirstOrDefaultAsync(q => q.Id == questId);
+
+        if (quest == null)
+            throw new ApplicationException("Quest no encontrada en los registros.");
+
+        if (quest.State == QuestState.Completed)
+            throw new ApplicationException("La Quest ya ha sido forjada y completada.");
+
+        quest.State = newState;
+
+        if (newState == QuestState.Completed)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null)
+            {
+                var xpGained = quest.Rewards.Sum(r => r.XpAmount);
+                user.TotalXp += xpGained;
+            }
+        }
+
+        await _context.SaveChangesAsync();
         return quest;
     }
 }
