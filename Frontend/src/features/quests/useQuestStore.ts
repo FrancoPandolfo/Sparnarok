@@ -44,7 +44,7 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
 
   updateQuestState: async (id: string, newState: QuestState, userId: string) => {
     const previousQuests = get().quests;
-    const previousXp = get().userXp;
+    // const previousXp = get().userXp;
     const quest = previousQuests.find(q => q.id === id);
     
     let xpGained = 0;
