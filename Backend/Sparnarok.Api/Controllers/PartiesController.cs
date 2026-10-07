@@ -134,6 +134,29 @@ public class PartiesController : ControllerBase
 
         return Ok(new { message = "Sesión Cero completada exitosamente." });
     }
+
+    [HttpPut("{partyId}/settings/multipliers")]
+    public async Task<IActionResult> UpdateMultipliers(Guid partyId, [FromBody] System.Collections.Generic.Dictionary<string, decimal> multipliers, [FromQuery] Guid requesterId)
+    {
+        var requester = await _context.PartyMembers
+            .Include(pm => pm.Party)
+            .FirstOrDefaultAsync(pm => pm.PartyId == partyId && pm.UserId == requesterId);
+
+        if (requester == null || requester.Role != "Manager")
+        {
+            return StatusCode(403, new { code = "ERR_UNAUTHORIZED", message = "Sólo los mánagers pueden editar las reglas." });
+        }
+
+        if (requester.Party != null && !requester.Party.IsPremium)
+        {
+            return StatusCode(403, new { code = "ERR_REQUIRES_PRO", message = "Desbloquea las Reglas Custom con Sparnarok Pro." });
+        }
+
+        requester.Party!.TagMultipliers = multipliers;
+        await _context.SaveChangesAsync();
+
+        return Ok(requester.Party.TagMultipliers);
+    }
 }
 
 public class InviteDto

@@ -38,7 +38,9 @@
     "subtitle": "Huella técnica y rendimiento de tu Party.",
     "radarTitle": "Distribución de Habilidades del Equipo",
     "topHeroes": "Top Performers (30 Días)",
-    "calibrate": "Calibrar"
+    "calibrate": "Calibrar",
+    "analyticsTab": "Analíticas",
+    "rulesTab": "Reglas de la Mesa"
   },
   "sessionZero": {
     "title": "Sesión Cero",
@@ -46,5 +48,16 @@
     "seniorityLabel": "Seniority Corporativo",
     "selectPlaceholder": "Seleccionar Nivel...",
     "saveButton": "Guardar Calibración"
+  },
+  "rules": {
+    "title": "Reglas Custom (Multiplicadores de XP)",
+    "tagPlaceholder": "Ej: Bug Crítico",
+    "addRule": "Añadir Regla",
+    "saveRules": "Guardar Reglas"
+  },
+  "paywall": {
+    "title": "Desbloquea las Reglas Custom",
+    "subtitle": "Potencia el progreso de tu equipo personalizando cómo se otorga la experiencia. Exclusivo para planes Pro.",
+    "cta": "Desbloquea Sparnarok Pro"
   }
 }

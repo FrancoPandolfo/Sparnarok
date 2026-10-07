@@ -8,8 +8,12 @@ interface QuestStoreState {
   isLoading: boolean;
   error: string | null;
   
+  error: string | null;
+  tagMultipliers: Record<string, number>;
+  
   createQuest: (payload: CreateQuestPayload) => Promise<void>;
   updateQuestState: (id: string, newState: QuestState, userId: string) => Promise<void>;
+  updateTagMultipliers: (multipliers: Record<string, number>) => Promise<void>;
   clearError: () => void;
 }
 
@@ -20,6 +24,7 @@ const initialMockQuests: Quest[] = [
     description: 'El login devuelve 500 a veces.',
     difficulty: QuestDifficulty.D,
     state: QuestState.Pending,
+    tags: ['Urgente', 'Bug'],
     rewards: [{ skillCategoryId: 'frontend', xpAmount: 50 }],
     createdAt: new Date().toISOString()
   },
@@ -39,8 +44,14 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
   userXp: 0,
   isLoading: false,
   error: null,
+  tagMultipliers: { 'Urgente': 2.0 },
 
   clearError: () => set({ error: null }),
+
+  updateTagMultipliers: async (multipliers: Record<string, number>) => {
+    set({ tagMultipliers: multipliers });
+    // Aquí iría el fetch PUT /api/party/{partyId}/settings/multipliers
+  },
 
   updateQuestState: async (id: string, newState: QuestState, userId: string) => {
     const previousQuests = get().quests;
@@ -49,7 +60,14 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
     
     let xpGained = 0;
     if (newState === QuestState.Completed && quest && quest.state !== QuestState.Completed) {
-      xpGained = quest.rewards?.reduce((acc, r) => acc + r.xpAmount, 0) || 0;
+      let baseXP = quest.rewards?.reduce((acc, r) => acc + r.xpAmount, 0) || 0;
+      let multiplier = 1;
+      quest.tags?.forEach(tag => {
+        if (get().tagMultipliers[tag]) {
+          multiplier *= get().tagMultipliers[tag];
+        }
+      });
+      xpGained = Math.round(baseXP * multiplier);
     }
 
     set(state => ({

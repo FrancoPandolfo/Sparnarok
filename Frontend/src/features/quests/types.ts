@@ -24,6 +24,7 @@ export interface Quest {
   description: string;
   difficulty: QuestDifficulty;
   state: QuestState;
+  tags?: string[];
   rewards: QuestReward[];
   createdAt: string;
 }

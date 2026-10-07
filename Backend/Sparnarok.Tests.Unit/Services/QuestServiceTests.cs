@@ -139,4 +139,51 @@ public class QuestServiceTests
         progression!.CurrentXp.Should().Be(130);
         progression.Level.Should().Be(2); // 1 + (130/100) = 2
     }
+
+    [Fact]
+    public async Task UpdateQuestStatusAsync_WithTagMultiplier_ShouldApplyMultiplierToXp()
+    {
+        // Arrange
+        using var context = GetDbContext();
+        var service = new QuestService(context);
+        
+        var userId = Guid.NewGuid();
+        var partyId = Guid.NewGuid();
+        var skillId = Guid.NewGuid();
+        
+        var user = new Sparnarok.Core.Entities.User { Id = userId, Username = "Hero", TotalXp = 0 };
+        context.Users.Add(user);
+
+        var party = new Sparnarok.Core.Entities.Party 
+        { 
+            Id = partyId, 
+            TagMultipliers = new Dictionary<string, decimal> { { "Bug", 1.5m } } 
+        };
+        context.Parties.Add(party);
+
+        var quest = new Sparnarok.Core.Entities.Quest
+        {
+            Id = Guid.NewGuid(),
+            PartyId = partyId,
+            Title = "Fix critical bug",
+            State = QuestState.InProgress,
+            Tags = new List<string> { "Bug" },
+            Rewards = new List<Sparnarok.Core.Entities.QuestReward>
+            {
+                new Sparnarok.Core.Entities.QuestReward { SkillCategoryId = skillId, XpAmount = 100 }
+            }
+        };
+        context.Quests.Add(quest);
+        await context.SaveChangesAsync();
+
+        // Act
+        await service.UpdateQuestStatusAsync(quest.Id, QuestState.Completed, userId);
+
+        // Assert
+        var updatedUser = await context.Users.FindAsync(userId);
+        updatedUser!.TotalXp.Should().Be(150); // 100 * 1.5 = 150
+
+        var progression = await context.UserSkillProgressions.FirstOrDefaultAsync(p => p.UserId == userId);
+        progression!.CurrentXp.Should().Be(150);
+    }
 }

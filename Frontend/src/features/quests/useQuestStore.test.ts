@@ -22,7 +22,7 @@ describe('useQuestStore Optimistic Updates', () => {
     const updatedQuest = immediateState.quests.find(q => q.id === questId);
     
     expect(updatedQuest?.state).toBe(QuestState.Completed);
-    expect(immediateState.userXp).toBe(50);
+    expect(immediateState.userXp).toBe(100);
 
     await updatePromise;
   });

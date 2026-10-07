@@ -28,6 +28,7 @@ public class QuestService : IQuestService
             Difficulty = dto.Difficulty,
             State = QuestState.Pending,
             CreatedAt = DateTime.UtcNow,
+            Tags = dto.Tags ?? new System.Collections.Generic.List<string>(),
             Rewards = dto.Rewards.Select(r => new QuestReward
             {
                 Id = Guid.NewGuid(),
@@ -67,9 +68,26 @@ public class QuestService : IQuestService
         if (newState == QuestState.Completed)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            
+            // Calculate XP Multiplier based on Party tags
+            var party = await _context.Parties.FirstOrDefaultAsync(p => p.Id == quest.PartyId);
+            var multipliers = party?.TagMultipliers ?? new System.Collections.Generic.Dictionary<string, decimal>();
+            decimal totalMultiplier = 1.0m;
+            if (quest.Tags != null)
+            {
+                foreach(var tag in quest.Tags)
+                {
+                    if (multipliers.TryGetValue(tag, out var mult))
+                    {
+                        totalMultiplier *= mult;
+                    }
+                }
+            }
+
             if (user != null)
             {
-                var xpGained = quest.Rewards.Sum(r => r.XpAmount);
+                var baseXP = quest.Rewards.Sum(r => r.XpAmount);
+                var xpGained = (int)Math.Round(baseXP * totalMultiplier, MidpointRounding.AwayFromZero);
                 user.TotalXp += xpGained;
 
                 foreach (var reward in quest.Rewards)
@@ -90,7 +108,8 @@ public class QuestService : IQuestService
                         _context.UserSkillProgressions.Add(progression);
                     }
                     
-                    progression.CurrentXp += reward.XpAmount;
+                    var rewardXp = (int)Math.Round(reward.XpAmount * totalMultiplier, MidpointRounding.AwayFromZero);
+                    progression.CurrentXp += rewardXp;
                     progression.Level = 1 + (progression.CurrentXp / 100);
                 }
             }

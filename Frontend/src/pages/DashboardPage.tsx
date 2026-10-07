@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { Trophy, Wand2 } from 'lucide-react';
 import { SessionZeroModal } from '../features/parties/components/SessionZeroModal';
+import { CustomRulesTab } from '../features/parties/components/CustomRulesTab';
 
 interface Performer {
   userId: string;
@@ -30,6 +31,9 @@ export const DashboardPage = () => {
     { userId: '3', username: 'Sam', xpGained: 800, isSessionZeroCompleted: false },
   ]);
 
+  const [activeTab, setActiveTab] = useState<'analytics' | 'rules'>('analytics');
+  const isPremium = new URLSearchParams(window.location.search).get('premium') === 'true';
+
   const [activeSessionZeroUser, setActiveSessionZeroUser] = useState<string | null>(null);
 
   const handleSaveSessionZero = (userId: string, xpMap: Record<string, number>) => {
@@ -50,8 +54,24 @@ export const DashboardPage = () => {
         <p className="text-gray-400">{t('dashboard.subtitle', 'Huella técnica y rendimiento de tu Party.')}</p>
       </div>
 
-      <div className="flex gap-8">
-        {/* Gráfico de Radar */}
+      <div className="mb-6 flex gap-4 border-b border-gray-800 pb-2">
+        <button 
+          onClick={() => setActiveTab('analytics')}
+          className={`font-bold px-4 py-2 ${activeTab === 'analytics' ? 'text-amber-500 border-b-2 border-amber-500' : 'text-gray-500'}`}
+        >
+          {t('dashboard.analyticsTab', 'Analíticas')}
+        </button>
+        <button 
+          onClick={() => setActiveTab('rules')}
+          className={`font-bold px-4 py-2 ${activeTab === 'rules' ? 'text-amber-500 border-b-2 border-amber-500' : 'text-gray-500'}`}
+        >
+          {t('dashboard.rulesTab', 'Reglas de la Mesa')}
+        </button>
+      </div>
+
+      {activeTab === 'analytics' ? (
+        <div className="flex gap-8">
+          {/* Gráfico de Radar */}
         <div className="flex-1 bg-gray-950 p-6 rounded-xl border border-gray-800 shadow-xl">
           <h3 className="text-xl font-bold text-white mb-6 text-center">{t('dashboard.radarTitle', 'Distribución de Habilidades del Equipo')}</h3>
           <div className="h-96 w-full">
@@ -101,6 +121,9 @@ export const DashboardPage = () => {
           ))}
         </div>
       </div>
+      ) : (
+        <CustomRulesTab isPremium={isPremium} />
+      )}
       
       {activeSessionZeroUser && (
         <SessionZeroModal 
