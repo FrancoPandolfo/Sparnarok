@@ -43,6 +43,50 @@ public class PartiesController : ControllerBase
 
         return Ok(new { message = "Usuario invitado con éxito" });
     }
+
+    [HttpGet("{partyId}/analytics")]
+    public async Task<IActionResult> GetAnalytics(Guid partyId, [FromQuery] Guid userId)
+    {
+        var membership = await _context.PartyMembers
+            .FirstOrDefaultAsync(pm => pm.PartyId == partyId && pm.UserId == userId);
+            
+        if (membership == null || membership.Role != "Manager")
+        {
+            return StatusCode(403, new { code = "ERR_UNAUTHORIZED", message = "Sólo los mánagers pueden ver las analíticas." });
+        }
+
+        var skillProgressions = await _context.UserSkillProgressions
+            .Include(usp => usp.SkillCategory)
+            .ToListAsync();
+
+        var distribution = skillProgressions
+            .GroupBy(usp => usp.SkillCategory?.Name ?? "Unknown")
+            .Select(g => new {
+                category = g.Key,
+                totalXp = g.Sum(x => x.CurrentXp)
+            })
+            .ToList();
+
+        var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+        var recentQuests = await _context.Quests
+            .Include(q => q.Assignee)
+            .Include(q => q.Rewards)
+            .Where(q => q.State == Sparnarok.Core.Enums.QuestState.Completed && q.CreatedAt >= thirtyDaysAgo && q.AssigneeId != null)
+            .ToListAsync();
+
+        var topPerformers = recentQuests
+            .GroupBy(q => new { Id = q.AssigneeId, Name = q.Assignee?.Username ?? "Unknown" })
+            .Select(g => new {
+                userId = g.Key.Id,
+                username = g.Key.Name,
+                xpGained = g.Sum(q => q.Rewards.Sum(r => r.XpAmount))
+            })
+            .OrderByDescending(x => x.xpGained)
+            .Take(3)
+            .ToList();
+
+        return Ok(new { distribution, topPerformers });
+    }
 }
 
 public class InviteDto
