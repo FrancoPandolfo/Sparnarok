@@ -148,7 +148,7 @@ public class QuestServiceTests
         var service = new QuestService(context);
         
         var userId = Guid.NewGuid();
-        var partyId = Guid.NewGuid();
+        var partyId = Guid.Empty;
         var skillId = Guid.NewGuid();
         
         var user = new Sparnarok.Core.Entities.User { Id = userId, Username = "Hero", TotalXp = 0 };
