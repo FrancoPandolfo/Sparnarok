@@ -17,16 +17,19 @@ public class QuestServiceTests
 {
     private class FakeTenantService : ITenantService
     {
-        public Guid GetCurrentPartyId() => Guid.Empty;
-        public void SetCurrentPartyId(Guid partyId) {}
+        public Guid CurrentId { get; set; } = Guid.Empty;
+        public Guid GetCurrentPartyId() => CurrentId;
+        public void SetCurrentPartyId(Guid partyId) { CurrentId = partyId; }
     }
 
-    private SparnarokDbContext GetDbContext()
+    private SparnarokDbContext GetDbContext(Guid? tenantId = null)
     {
         var options = new DbContextOptionsBuilder<SparnarokDbContext>()
             .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
-        return new SparnarokDbContext(options, new FakeTenantService());
+        var tenant = new FakeTenantService();
+        if (tenantId.HasValue) tenant.CurrentId = tenantId.Value;
+        return new SparnarokDbContext(options, tenant);
     }
 
     [Fact]
@@ -144,11 +147,11 @@ public class QuestServiceTests
     public async Task UpdateQuestStatusAsync_WithTagMultiplier_ShouldApplyMultiplierToXp()
     {
         // Arrange
-        using var context = GetDbContext();
+        var partyId = Guid.NewGuid();
+        using var context = GetDbContext(partyId);
         var service = new QuestService(context);
         
         var userId = Guid.NewGuid();
-        var partyId = Guid.Empty;
         var skillId = Guid.NewGuid();
         
         var user = new Sparnarok.Core.Entities.User { Id = userId, Username = "Hero", TotalXp = 0 };
