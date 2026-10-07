@@ -37,6 +37,14 @@
     "title": "Manager Analytics",
     "subtitle": "Huella técnica y rendimiento de tu Party.",
     "radarTitle": "Distribución de Habilidades del Equipo",
-    "topHeroes": "Top Performers (30 Días)"
+    "topHeroes": "Top Performers (30 Días)",
+    "calibrate": "Calibrar"
+  },
+  "sessionZero": {
+    "title": "Sesión Cero",
+    "subtitle": "Calibra la XP inicial del miembro",
+    "seniorityLabel": "Seniority Corporativo",
+    "selectPlaceholder": "Seleccionar Nivel...",
+    "saveButton": "Guardar Calibración"
   }
 }

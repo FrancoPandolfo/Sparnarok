@@ -8,6 +8,7 @@ public class PartyMember
     public Guid PartyId { get; set; }
     public Guid UserId { get; set; }
     public string Role { get; set; } = "Member";
+    public bool IsSessionZeroCompleted { get; set; } = false;
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 
     public Party? Party { get; set; }

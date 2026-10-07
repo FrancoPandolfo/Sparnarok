@@ -37,6 +37,14 @@
     "title": "Manager Analytics",
     "subtitle": "Technical footprint and performance of your Party.",
     "radarTitle": "Team Skill Distribution",
-    "topHeroes": "Top Performers (30 Days)"
+    "topHeroes": "Top Performers (30 Days)",
+    "calibrate": "Calibrate"
+  },
+  "sessionZero": {
+    "title": "Session Zero",
+    "subtitle": "Calibrate member's initial XP",
+    "seniorityLabel": "Corporate Seniority",
+    "selectPlaceholder": "Select Level...",
+    "saveButton": "Save Calibration"
   }
 }
