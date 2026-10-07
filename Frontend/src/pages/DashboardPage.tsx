@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import { Trophy } from 'lucide-react';
+import { Trophy, Wand2, AnimatePresence } from 'lucide-react';
+import { SessionZeroModal } from '../features/parties/components/SessionZeroModal';
 
 export const DashboardPage = () => {
   const { t } = useTranslation();
@@ -15,11 +16,24 @@ export const DashboardPage = () => {
     { subject: 'QA', A: 1500, fullMark: 10000 },
   ];
 
-  const topPerformers = [
-    { userId: '1', username: 'Alex', xpGained: 1200 },
-    { userId: '2', username: 'Mery', xpGained: 950 },
-    { userId: '3', username: 'Sam', xpGained: 800 },
-  ];
+  const [topPerformers, setTopPerformers] = useState([
+    { userId: '1', username: 'Alex', xpGained: 1200, isSessionZeroCompleted: true },
+    { userId: '2', username: 'Mery', xpGained: 950, isSessionZeroCompleted: true },
+    { userId: '3', username: 'Sam', xpGained: 800, isSessionZeroCompleted: false },
+  ]);
+
+  const [activeSessionZeroUser, setActiveSessionZeroUser] = useState<string | null>(null);
+
+  const handleSaveSessionZero = (userId: string, xpMap: Record<string, number>) => {
+    // Optimistic Update
+    setTopPerformers(prev => prev.map(p => {
+      if (p.userId === userId) {
+        return { ...p, isSessionZeroCompleted: true, xpGained: p.xpGained + Object.values(xpMap).reduce((a, b) => a + b, 0) };
+      }
+      return p;
+    }));
+    setActiveSessionZeroUser(null);
+  };
 
   return (
     <div className="w-full h-full flex flex-col p-6 bg-gray-900 overflow-y-auto">
@@ -58,13 +72,31 @@ export const DashboardPage = () => {
                 </div>
                 <span className="font-bold text-white text-lg">{hero.username}</span>
               </div>
-              <div className="text-emerald-400 font-bold">
-                +{hero.xpGained} XP
+              <div className="flex items-center gap-3">
+                {!hero.isSessionZeroCompleted && (
+                  <button 
+                    onClick={() => setActiveSessionZeroUser(hero.userId)}
+                    className="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded flex items-center gap-1 font-bold transition-colors"
+                  >
+                    <Wand2 size={12} /> {t('dashboard.calibrate', 'Calibrar')}
+                  </button>
+                )}
+                <div className="text-emerald-400 font-bold">
+                  +{hero.xpGained} XP
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+      
+      {activeSessionZeroUser && (
+        <SessionZeroModal 
+          userId={activeSessionZeroUser} 
+          onClose={() => setActiveSessionZeroUser(null)} 
+          onSave={(xpMap) => handleSaveSessionZero(activeSessionZeroUser, xpMap)}
+        />
+      )}
     </div>
   );
 };

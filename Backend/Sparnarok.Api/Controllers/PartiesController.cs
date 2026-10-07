@@ -87,6 +87,53 @@ public class PartiesController : ControllerBase
 
         return Ok(new { distribution, topPerformers });
     }
+
+    [HttpPost("{partyId}/members/{userId}/session-zero")]
+    public async Task<IActionResult> SessionZero(Guid partyId, Guid userId, [FromBody] System.Collections.Generic.Dictionary<string, int> initialXp, [FromQuery] Guid requesterId)
+    {
+        var requester = await _context.PartyMembers
+            .FirstOrDefaultAsync(pm => pm.PartyId == partyId && pm.UserId == requesterId);
+            
+        if (requester == null || requester.Role != "Manager")
+        {
+            return StatusCode(403, new { code = "ERR_UNAUTHORIZED", message = "Sólo los mánagers pueden ejecutar la Sesión Cero." });
+        }
+
+        var targetMember = await _context.PartyMembers
+            .FirstOrDefaultAsync(pm => pm.PartyId == partyId && pm.UserId == userId);
+
+        if (targetMember == null) return NotFound("Usuario no encontrado en la Party");
+
+        if (targetMember.IsSessionZeroCompleted)
+        {
+            return BadRequest(new { code = "ERR_SESSION_ZERO_ALREADY_COMPLETED", message = "La calibración de la Sesión Cero ya fue realizada para este usuario." });
+        }
+
+        var categories = await _context.SkillCategories.ToListAsync();
+
+        foreach (var (categoryName, xpAmount) in initialXp)
+        {
+            var category = categories.FirstOrDefault(c => c.Name == categoryName);
+            if (category != null)
+            {
+                var progression = new UserSkillProgression
+                {
+                    Id = Guid.NewGuid(),
+                    PartyId = partyId,
+                    UserId = userId,
+                    SkillCategoryId = category.Id,
+                    CurrentXp = xpAmount,
+                    Level = 1 + (xpAmount / 100)
+                };
+                _context.UserSkillProgressions.Add(progression);
+            }
+        }
+
+        targetMember.IsSessionZeroCompleted = true;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Sesión Cero completada exitosamente." });
+    }
 }
 
 public class InviteDto
