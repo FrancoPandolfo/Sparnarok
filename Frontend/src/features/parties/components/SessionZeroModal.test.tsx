@@ -5,7 +5,7 @@ import { SENIORITY_PRESETS } from '../../../constants/SeniorityMapper';
 
 // Mock react-i18next
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string, fallback: string) => fallback })
+  useTranslation: () => ({ t: (_key: string, fallback: string) => fallback })
 }));
 
 describe('SessionZeroModal', () => {

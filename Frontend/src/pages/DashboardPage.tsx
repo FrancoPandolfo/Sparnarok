@@ -1,7 +1,15 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import { Trophy, Wand2, AnimatePresence } from 'lucide-react';
+import { Trophy, Wand2 } from 'lucide-react';
 import { SessionZeroModal } from '../features/parties/components/SessionZeroModal';
+
+interface Performer {
+  userId: string;
+  username: string;
+  xpGained: number;
+  isSessionZeroCompleted: boolean;
+}
 
 export const DashboardPage = () => {
   const { t } = useTranslation();
@@ -16,7 +24,7 @@ export const DashboardPage = () => {
     { subject: 'QA', A: 1500, fullMark: 10000 },
   ];
 
-  const [topPerformers, setTopPerformers] = useState([
+  const [topPerformers, setTopPerformers] = useState<Performer[]>([
     { userId: '1', username: 'Alex', xpGained: 1200, isSessionZeroCompleted: true },
     { userId: '2', username: 'Mery', xpGained: 950, isSessionZeroCompleted: true },
     { userId: '3', username: 'Sam', xpGained: 800, isSessionZeroCompleted: false },

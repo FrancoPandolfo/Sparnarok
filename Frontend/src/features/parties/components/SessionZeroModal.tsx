@@ -10,7 +10,7 @@ interface Props {
   onSave: (xpMap: Record<string, number>) => void;
 }
 
-export const SessionZeroModal = ({ userId, onClose, onSave }: Props) => {
+export const SessionZeroModal = ({ userId: _userId, onClose, onSave }: Props) => {
   const { t } = useTranslation();
   const [seniority, setSeniority] = useState<keyof typeof SENIORITY_PRESETS | ''>('');
   const [xpMap, setXpMap] = useState<Record<string, number>>({
