@@ -100,6 +100,7 @@ public class QuestService : IQuestService
                         progression = new UserSkillProgression
                         {
                             Id = Guid.NewGuid(),
+                            PartyId = quest.PartyId,
                             UserId = userId,
                             SkillCategoryId = reward.SkillCategoryId,
                             CurrentXp = 0,
