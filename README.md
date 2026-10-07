@@ -1,6 +1,7 @@
 # ⚔️ Sparnarok
 
-**Sparnarok** es un gestor de flujos de trabajo gamificado que reemplaza el tradicional tablero Kanban por un sistema de progresión basado en mecánicas de juegos de rol (RPG). Convierte las tareas rutinarias en *Quests*, permitiendo a los usuarios ganar experiencia (XP) y desbloquear nodos visuales en un **Árbol de Habilidades Interactivo**. Incluye mecánicas de monetización B2B integradas (Paywalls en la UI).
+**Sparnarok** es un gestor de flujos de trabajo gamificado que reemplaza el tradicional tablero Kanban por un sistema de progresión basado en mecánicas de juegos de rol (RPG). Convierte las tareas rutinarias en *Quests*, permitiendo a los usuarios ganar experiencia (XP) y desbloquear nodos visuales en un **Árbol de Habilidades Interactivo**.
+Incluye un Motor de XP avanzado, Arquitectura Multi-Tenant (Parties B2B aisladas), y mecánicas de monetización integradas (Paywalls y Sesión Cero de calibración).
 
 ## 📁 Estructura del Proyecto
 
@@ -62,7 +63,7 @@ Si necesitas instalar los navegadores primero:
 ```bash
 cd Backend/Sparnarok.Tests.E2E
 dotnet build
-pwsh bin/Debug/net8.0/playwright.ps1 install
+pwsh bin/Debug/net10.0/playwright.ps1 install
 ```
 Ejecutar E2E:
 ```bash

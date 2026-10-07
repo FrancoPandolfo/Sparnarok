@@ -33,3 +33,8 @@ Para soportar múltiples tenants y cálculos complejos sin degradar el rendimien
   - Inyección de dependencias estricta.
   - Aislamiento de las entidades de DB usando **DTOs fuertemente tipados**.
   - **Validación de entrada agresiva**: Utilizar `FluentValidation` en la capa de Aplicación/API antes de procesar reglas de negocio o tocar la base de datos.
+
+## 📈 4. Motor de XP y Sesión Cero
+El corazón del "juego" empresarial reside en la calibración y otorgamiento de recompensas técnicas:
+- **Flujo Transaccional de XP**: Mover una `Quest` a completada dispara el motor (e.g. `QuestService`) agregando experiencia específica a las ramas (`UserSkillProgression`) y elevando el `TotalXp`. El nivel se calcula derivado matemáticamente como `1 + (xp / 100)`.
+- **Sesión Cero**: Los líderes técnicos calibran el Seniority inicial de los desarrolladores usando un set de variables predefinidas (Trainee a Staff) lo cual acelera el *onboarding* corporativo mientras bloquea re-calibraciones fraudulentas mediante flags transaccionales (`IsSessionZeroCompleted`).

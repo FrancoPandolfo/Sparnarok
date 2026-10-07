@@ -56,13 +56,17 @@ export const DashboardPage = () => {
           <h3 className="text-xl font-bold text-white mb-6 text-center">{t('dashboard.radarTitle', 'Distribución de Habilidades del Equipo')}</h3>
           <div className="h-96 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={distributionData}>
-                <PolarGrid stroke="#374151" />
-                <PolarAngleAxis dataKey="subject" tick={{ fill: '#9ca3af', fontSize: 12 }} />
-                <PolarRadiusAxis angle={30} domain={[0, 10000]} tick={false} axisLine={false} />
-                <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }} />
-                <Radar name="XP Acumulada" dataKey="A" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.5} />
-              </RadarChart>
+              {!distributionData || distributionData.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-gray-500">Sin datos de habilidades</div>
+              ) : (
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={distributionData}>
+                  <PolarGrid stroke="#374151" />
+                  <PolarAngleAxis dataKey="subject" tick={{ fill: '#9ca3af', fontSize: 12 }} />
+                  <PolarRadiusAxis angle={30} domain={[0, 10000]} tick={false} axisLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }} />
+                  <Radar name="XP Acumulada" dataKey="A" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.5} />
+                </RadarChart>
+              )}
             </ResponsiveContainer>
           </div>
         </div>
