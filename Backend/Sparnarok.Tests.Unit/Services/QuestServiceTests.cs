@@ -92,5 +92,51 @@ public class QuestServiceTests
         result.State.Should().Be(QuestState.Completed);
         var updatedUser = await context.Users.FindAsync(userId);
         updatedUser!.TotalXp.Should().Be(60); // 10 base + 50 reward
+
+        var progression = await context.UserSkillProgressions.FirstOrDefaultAsync(p => p.UserId == userId);
+        progression.Should().NotBeNull();
+        progression!.CurrentXp.Should().Be(50);
+        progression.Level.Should().Be(1); // 1 + (50/100) = 1
+    }
+
+    [Fact]
+    public async Task UpdateQuestStatusAsync_ToCompleted_ShouldLevelUpUserSkillWhenXpExceeds100()
+    {
+        // Arrange
+        using var context = GetDbContext();
+        var service = new QuestService(context);
+        
+        var userId = Guid.NewGuid();
+        var skillId = Guid.NewGuid();
+        context.Users.Add(new Sparnarok.Core.Entities.User { Id = userId, Username = "Hero", TotalXp = 0 });
+        context.UserSkillProgressions.Add(new Sparnarok.Core.Entities.UserSkillProgression
+        {
+            Id = Guid.NewGuid(),
+            UserId = userId,
+            SkillCategoryId = skillId,
+            CurrentXp = 80,
+            Level = 1
+        });
+
+        var quest = new Sparnarok.Core.Entities.Quest
+        {
+            Id = Guid.NewGuid(),
+            Title = "Big Boss",
+            State = QuestState.InProgress,
+            Rewards = new List<Sparnarok.Core.Entities.QuestReward>
+            {
+                new Sparnarok.Core.Entities.QuestReward { SkillCategoryId = skillId, XpAmount = 50 }
+            }
+        };
+        context.Quests.Add(quest);
+        await context.SaveChangesAsync();
+
+        // Act
+        await service.UpdateQuestStatusAsync(quest.Id, QuestState.Completed, userId);
+
+        // Assert
+        var progression = await context.UserSkillProgressions.FirstOrDefaultAsync(p => p.UserId == userId);
+        progression!.CurrentXp.Should().Be(130);
+        progression.Level.Should().Be(2); // 1 + (130/100) = 2
     }
 }
