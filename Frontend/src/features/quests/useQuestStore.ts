@@ -7,8 +7,6 @@ interface QuestStoreState {
   userXp: number;
   isLoading: boolean;
   error: string | null;
-  
-  error: string | null;
   tagMultipliers: Record<string, number>;
   
   createQuest: (payload: CreateQuestPayload) => Promise<void>;
