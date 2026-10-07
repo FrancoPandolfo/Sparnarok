@@ -9,7 +9,7 @@ describe('useQuestStore Optimistic Updates', () => {
   });
 
   it('optimistically updates the state and adds XP immediately before API response', async () => {
-    global.fetch = vi.fn().mockImplementation(() => 
+    globalThis.fetch = vi.fn().mockImplementation(() => 
       new Promise(resolve => setTimeout(() => resolve({ ok: true }), 100))
     );
 
