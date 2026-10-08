@@ -20,9 +20,11 @@ public class QuestService : IQuestService
 
     public async Task<Quest> CreateQuestAsync(CreateQuestDto dto)
     {
+        var questId = Guid.NewGuid();
         var quest = new Quest
         {
-            Id = Guid.NewGuid(),
+            Id = questId,
+            DisplayId = "SPAR-" + questId.ToString().Substring(0, 8).ToUpper(),
             Title = dto.Title,
             Description = dto.Description,
             Difficulty = dto.Difficulty,

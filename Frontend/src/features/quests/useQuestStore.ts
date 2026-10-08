@@ -80,7 +80,7 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
         body: JSON.stringify({ state: newState })
       });
       if (!response.ok) throw new Error('API Error');
-    } catch (e) {
+    } catch {
       // TEMP: Comentamos el rollback para que puedas jugar con la UI visualmente
       // sin necesidad de tener PostgreSQL ni la API corriendo.
       // set({ quests: previousQuests, userXp: previousXp });

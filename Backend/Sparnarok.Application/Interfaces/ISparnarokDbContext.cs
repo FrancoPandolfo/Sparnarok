@@ -14,6 +14,7 @@ public interface ISparnarokDbContext
     DbSet<UserSkillProgression> UserSkillProgressions { get; set; }
     DbSet<Party> Parties { get; set; }
     DbSet<PartyMember> PartyMembers { get; set; }
+    DbSet<PartyWebhookEvent> PartyWebhookEvents { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -9,6 +9,7 @@ public class Quest : IMustHaveParty
 {
     public Guid Id { get; set; }
     public Guid PartyId { get; set; }
+    public string DisplayId { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public QuestDifficulty Difficulty { get; set; }
