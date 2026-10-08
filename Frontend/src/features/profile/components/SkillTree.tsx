@@ -6,7 +6,7 @@ import { Lock, Unlock } from 'lucide-react';
 import { PaywallModal } from './PaywallModal';
 
 const initialNodes = [
-  { id: '1', position: { x: 250, y: 50 }, data: { label: 'Fundamentos', isPremium: false, unlocked: true } },
+  { id: '1', position: { x: 250, y: 50 }, data: { label: 'Iniciado', isPremium: false, unlocked: true } },
   { id: '2', position: { x: 100, y: 150 }, data: { label: 'Frontend', isPremium: false, unlocked: true } },
   { id: '3', position: { x: 400, y: 150 }, data: { label: 'Backend', isPremium: false, unlocked: false } },
   { id: '4', position: { x: 400, y: 250 }, data: { label: 'Arquitectura Cloud', isPremium: true, unlocked: false } },
@@ -29,7 +29,7 @@ export const SkillTree = () => {
   }, []);
 
   return (
-    <div className="w-full h-full bg-gray-900">
+    <div className="w-full h-[calc(100vh-200px)] bg-gray-900">
       <ReactFlow
         nodes={nodes.map(n => ({
           ...n,

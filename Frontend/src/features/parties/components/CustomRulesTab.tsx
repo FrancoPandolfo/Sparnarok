@@ -29,7 +29,7 @@ export const CustomRulesTab = ({ isPremium }: Props) => {
 
   return (
     <div className="relative p-6 bg-gray-950 border border-gray-800 rounded-xl overflow-hidden mt-6">
-      <div className={`transition-opacity duration-300 ${!isPremium ? 'opacity-30 pointer-events-none' : ''}`}>
+      <div className={`transition-opacity duration-300 ${!isPremium ? 'opacity-50 pointer-events-none' : ''}`}>
         <h3 className="text-2xl font-bold text-amber-500 mb-4">{t('rules.title', 'Reglas Custom (Multiplicadores de XP)')}</h3>
         
         <div className="space-y-4 mb-6">
@@ -89,12 +89,12 @@ export const CustomRulesTab = ({ isPremium }: Props) => {
       </div>
 
       {!isPremium && (
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-10"
-        >
-          <div className="bg-gray-900 border border-amber-500/30 p-8 rounded-2xl shadow-2xl max-w-lg text-center">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gray-900 border border-amber-500/30 p-8 rounded-2xl shadow-2xl max-w-lg text-center"
+          >
             <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Lock className="text-amber-500" size={32} />
             </div>
@@ -103,8 +103,8 @@ export const CustomRulesTab = ({ isPremium }: Props) => {
             <button className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-gray-900 font-bold rounded-lg shadow-lg hover:shadow-amber-500/25 transition-all">
               {t('paywall.cta', 'Desbloquea Sparnarok Pro')}
             </button>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       )}
     </div>
   );
