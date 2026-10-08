@@ -17,5 +17,6 @@ public class Quest : IMustHaveParty
     
     public Guid? AssigneeId { get; set; }
     public User? Assignee { get; set; }
+    public List<string> Tags { get; set; } = new();
     public ICollection<QuestReward> Rewards { get; set; } = new List<QuestReward>();
 }

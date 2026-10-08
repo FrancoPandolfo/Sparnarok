@@ -38,7 +38,9 @@
     "subtitle": "Technical footprint and performance of your Party.",
     "radarTitle": "Team Skill Distribution",
     "topHeroes": "Top Performers (30 Days)",
-    "calibrate": "Calibrate"
+    "calibrate": "Calibrate",
+    "analyticsTab": "Analytics",
+    "rulesTab": "Table Rules"
   },
   "sessionZero": {
     "title": "Session Zero",
@@ -46,5 +48,16 @@
     "seniorityLabel": "Corporate Seniority",
     "selectPlaceholder": "Select Level...",
     "saveButton": "Save Calibration"
+  },
+  "rules": {
+    "title": "Custom Rules (XP Multipliers)",
+    "tagPlaceholder": "Ex: Critical Bug",
+    "addRule": "Add Rule",
+    "saveRules": "Save Rules"
+  },
+  "paywall": {
+    "title": "Unlock Custom Rules",
+    "subtitle": "Boost your team's progress by customizing how experience is granted. Exclusive to Pro plans.",
+    "cta": "Unlock Sparnarok Pro"
   }
 }
