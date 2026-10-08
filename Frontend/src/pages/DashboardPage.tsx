@@ -4,6 +4,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 import { Trophy, Wand2 } from 'lucide-react';
 import { SessionZeroModal } from '../features/parties/components/SessionZeroModal';
 import { CustomRulesTab } from '../features/parties/components/CustomRulesTab';
+import { IntegrationsTab } from '../features/parties/components/IntegrationsTab';
 
 interface Performer {
   userId: string;
@@ -31,7 +32,7 @@ export const DashboardPage = () => {
     { userId: '3', username: 'Sam', xpGained: 800, isSessionZeroCompleted: false },
   ]);
 
-  const [activeTab, setActiveTab] = useState<'analytics' | 'rules'>('analytics');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'rules' | 'integrations'>('analytics');
   const isPremium = new URLSearchParams(window.location.search).get('premium') === 'true';
 
   const [activeSessionZeroUser, setActiveSessionZeroUser] = useState<string | null>(null);
@@ -67,9 +68,15 @@ export const DashboardPage = () => {
         >
           {t('dashboard.rulesTab', 'Reglas de la Mesa')}
         </button>
+        <button 
+          onClick={() => setActiveTab('integrations')}
+          className={`font-bold px-4 py-2 ${activeTab === 'integrations' ? 'text-amber-500 border-b-2 border-amber-500' : 'text-gray-500'}`}
+        >
+          {t('dashboard.integrationsTab', 'Integraciones')}
+        </button>
       </div>
 
-      {activeTab === 'analytics' ? (
+      {activeTab === 'analytics' && (
         <div className="flex gap-8">
           {/* Gráfico de Radar */}
         <div className="flex-1 bg-gray-950 p-6 rounded-xl border border-gray-800 shadow-xl">
@@ -120,9 +127,12 @@ export const DashboardPage = () => {
             </div>
           ))}
         </div>
-      </div>
-      ) : (
+      )}
+      {activeTab === 'rules' && (
         <CustomRulesTab isPremium={isPremium} />
+      )}
+      {activeTab === 'integrations' && (
+        <IntegrationsTab partyId="mock-party-id" />
       )}
       
       {activeSessionZeroUser && (
