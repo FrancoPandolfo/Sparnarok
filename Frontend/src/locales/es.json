@@ -59,5 +59,19 @@
     "title": "Desbloquea las Reglas Custom",
     "subtitle": "Potencia el progreso de tu equipo personalizando cómo se otorga la experiencia. Exclusivo para planes Pro.",
     "cta": "Desbloquea Sparnarok Pro"
+  },
+  "integrations": {
+    "title": "Git Webhooks",
+    "subtitle": "Conecta tus repositorios para completar Quests automáticamente al mergear Pull Requests.",
+    "webhookUrl": "Webhook URL",
+    "secret": "Secret Token (HMAC SHA-256)",
+    "regenerateBtn": "Regenerar",
+    "instructionsTitle": "Instrucciones",
+    "inst1": "Ve a Settings > Webhooks en Github o Bitbucket.",
+    "inst2": "Pega la URL del Webhook. Selecciona Content type: application/json.",
+    "inst3": "Pega el Secret Token. Selecciona solo eventos de Pull Request.",
+    "inst4": "Añade [SPAR-12345678] al título de tu PR. Al mergearlo, la Quest se completará sola.",
+    "history": "Últimos eventos recibidos",
+    "noEvents": "Aún no se han recibido eventos."
   }
 }

@@ -59,5 +59,19 @@
     "title": "Unlock Custom Rules",
     "subtitle": "Boost your team's progress by customizing how experience is granted. Exclusive to Pro plans.",
     "cta": "Unlock Sparnarok Pro"
+  },
+  "integrations": {
+    "title": "Git Webhooks",
+    "subtitle": "Connect your repositories to automatically complete Quests when Pull Requests are merged.",
+    "webhookUrl": "Webhook URL",
+    "secret": "Secret Token (HMAC SHA-256)",
+    "regenerateBtn": "Regenerate",
+    "instructionsTitle": "Instructions",
+    "inst1": "Go to Settings > Webhooks in Github or Bitbucket.",
+    "inst2": "Paste the Webhook URL. Select Content type: application/json.",
+    "inst3": "Paste the Secret Token. Select only Pull Request events.",
+    "inst4": "Add [SPAR-12345678] to your PR title. When merged, the Quest will auto-complete.",
+    "history": "Recent Events",
+    "noEvents": "No events received yet."
   }
 }
