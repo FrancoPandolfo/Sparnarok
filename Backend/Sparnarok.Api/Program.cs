@@ -19,6 +19,8 @@ builder.Services.AddScoped<ISparnarokDbContext>(provider => provider.GetRequired
 builder.Services.AddScoped<IQuestService, QuestService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<ITenantService, TenantService>();
+builder.Services.AddScoped<IRealTimeNotificationService, Sparnarok.Api.Services.SignalRNotificationService>();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
@@ -30,5 +32,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<Sparnarok.Api.Hubs.PartyHub>("/api/partyHub");
 
 app.Run();

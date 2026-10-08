@@ -11,6 +11,7 @@ interface QuestStoreState {
   
   createQuest: (payload: CreateQuestPayload) => Promise<void>;
   updateQuestState: (id: string, newState: QuestState, userId: string) => Promise<void>;
+  setQuestStateLocal: (id: string, newState: QuestState) => void;
   updateTagMultipliers: (multipliers: Record<string, number>) => Promise<void>;
   clearError: () => void;
 }
@@ -49,6 +50,12 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
   updateTagMultipliers: async (multipliers: Record<string, number>) => {
     set({ tagMultipliers: multipliers });
     // Aquí iría el fetch PUT /api/party/{partyId}/settings/multipliers
+  },
+
+  setQuestStateLocal: (id: string, newState: QuestState) => {
+    set(state => ({
+      quests: state.quests.map(q => q.id === id ? { ...q, state: newState } : q)
+    }));
   },
 
   updateQuestState: async (id: string, newState: QuestState, userId: string) => {

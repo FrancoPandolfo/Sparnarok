@@ -11,23 +11,36 @@ interface FeedItem {
   time: string;
 }
 
-export const PartyActivityFeed = () => {
+interface Props {
+  connection?: any;
+}
+
+export const PartyActivityFeed = ({ connection }: Props) => {
   const { t } = useTranslation();
   const [feed, setFeed] = useState<FeedItem[]>([
     { id: '1', type: 'quest_completed', user: 'Mery', action: t('feed.questAction', "completó 'Migrar DB' (+100 XP)"), time: 'Hace 5m' },
     { id: '2', type: 'level_up', user: 'Alex', action: t('feed.levelAction', 'subió a Rango 3 en Backend'), time: 'Hace 12m' }
   ]);
 
-  // Simulate incoming events
   useEffect(() => {
-    const timer = setTimeout(() => {
+    if (!connection) return;
+
+    const onNewActivity = (payload: any) => {
       setFeed(prev => [
-        { id: Date.now().toString(), type: 'quest_completed', user: 'Tú', action: t('feed.questActionNew', "completaste una Quest épica"), time: 'Ahora' },
+        { 
+          id: payload.id || Date.now().toString(), 
+          type: 'quest_completed', 
+          user: 'Party Member', 
+          action: payload.message || 'completó una Quest', 
+          time: 'Ahora' 
+        },
         ...prev.slice(0, 4)
       ]);
-    }, 10000);
-    return () => clearTimeout(timer);
-  }, [t]);
+    };
+
+    connection.on('NewPartyActivity', onNewActivity);
+    return () => { connection.off('NewPartyActivity', onNewActivity); };
+  }, [connection]);
 
   return (
     <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 flex flex-col h-full overflow-hidden">
