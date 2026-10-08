@@ -51,7 +51,7 @@ public class SessionZeroTests
             
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Contains("ERR_SESSION_ZERO_ALREADY_COMPLETED", badRequestResult.Value.ToString());
+            Assert.Contains("ERR_SESSION_ZERO_ALREADY_COMPLETED", badRequestResult.Value?.ToString() ?? "");
         }
     }
 }

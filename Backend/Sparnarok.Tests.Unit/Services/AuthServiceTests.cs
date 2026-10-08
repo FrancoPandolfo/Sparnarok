@@ -6,6 +6,7 @@ using Moq;
 using Sparnarok.Application.DTOs;
 using Sparnarok.Application.Services;
 using Sparnarok.Core.Entities;
+using Sparnarok.Application.Interfaces;
 using Sparnarok.Infrastructure.Data;
 using Xunit;
 
