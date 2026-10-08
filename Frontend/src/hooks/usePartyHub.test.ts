@@ -1,7 +1,6 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { usePartyHub } from './usePartyHub';
-import * as signalR from '@microsoft/signalr';
 
 vi.mock('@microsoft/signalr', () => {
   const startMock = vi.fn().mockResolvedValue(undefined);
