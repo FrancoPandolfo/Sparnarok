@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Github, RefreshCw, Key, Clipboard, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 

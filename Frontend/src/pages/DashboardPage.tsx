@@ -127,6 +127,7 @@ export const DashboardPage = () => {
             </div>
           ))}
         </div>
+        </div>
       )}
       {activeTab === 'rules' && (
         <CustomRulesTab isPremium={isPremium} />
