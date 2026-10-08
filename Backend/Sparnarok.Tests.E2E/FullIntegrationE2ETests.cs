@@ -12,6 +12,10 @@ public class FullIntegrationE2ETests : PageTest
     [Test]
     public async Task Manager_HappyPath_CalibrationAndQuestCompletion()
     {
+        // Auth bypass
+        await Page.GotoAsync("http://localhost:5174/login");
+        await Page.EvaluateAsync("window.localStorage.setItem('sparnarok-auth', '{\"state\":{\"token\":\"mock-token\",\"username\":\"Hero\"},\"version\":0}')");
+
         // Navegar al dashboard
         await Page.GotoAsync("http://localhost:5174/party/dashboard");
         

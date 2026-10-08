@@ -8,6 +8,7 @@ import { QuestState } from '../types';
 import { QuestCard } from './QuestCard';
 import { PartyActivityFeed } from '../../parties/components/PartyActivityFeed';
 import { usePartyHub } from '../../../hooks/usePartyHub';
+import { useAuthStore } from '../../auth/useAuthStore';
 
 const COLUMNS = [
   { id: QuestState.Pending.toString(), i18nKey: 'quest.board.columns.pending' },
@@ -18,9 +19,10 @@ const COLUMNS = [
 export const QuestBoard = () => {
   const { t } = useTranslation();
   const { quests, updateQuestState, setQuestStateLocal } = useQuestStore();
+  const token = useAuthStore(state => state.token);
   const [xpPopup, setXpPopup] = useState<{ visible: boolean; xp: number }>({ visible: false, xp: 0 });
 
-  const connection = usePartyHub('mock-party-id', 'mock-token');
+  const connection = usePartyHub('mock-party-id', token || '');
 
   useEffect(() => {
     if (!connection) return;
