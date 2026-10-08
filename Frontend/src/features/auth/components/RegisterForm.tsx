@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '../useAuthStore';
 
 export const RegisterForm = () => {
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const setAuth = useAuthStore(state => state.setAuth);
@@ -76,14 +78,23 @@ export const RegisterForm = () => {
           </div>
           <div>
             <label className="block text-gray-400 text-sm font-bold mb-2">Password</label>
-            <input 
-              type="password" 
-              required
-              minLength={6}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full bg-gray-950 border border-gray-700 text-white rounded p-3 focus:outline-none focus:border-amber-500 transition-colors"
-            />
+            <div className="relative">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                required
+                minLength={6}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full bg-gray-950 border border-gray-700 text-white rounded p-3 pr-10 focus:outline-none focus:border-amber-500 transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3.5 text-gray-400 hover:text-amber-500 transition-colors"
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <button type="submit" className="w-full bg-amber-500 text-gray-900 font-bold py-3 rounded hover:bg-amber-600 transition-colors">
             Crear Héroe
