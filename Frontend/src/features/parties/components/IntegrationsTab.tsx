@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Github, RefreshCw, Key, Clipboard, CheckCircle } from 'lucide-react';
+import { Webhook, RefreshCw, Key, Clipboard, CheckCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface Props {
@@ -38,7 +38,7 @@ export const IntegrationsTab = ({ partyId }: Props) => {
   return (
     <div className="p-6 bg-gray-950 border border-gray-800 rounded-xl mt-6">
       <div className="flex items-center gap-3 mb-6">
-        <Github className="text-white" size={28} />
+        <Webhook className="text-white" size={28} />
         <h3 className="text-2xl font-bold text-white">{t('integrations.title', 'Git Webhooks')}</h3>
       </div>
       
