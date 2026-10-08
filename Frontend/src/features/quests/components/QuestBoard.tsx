@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DragDropContext, Droppable } from '@hello-pangea/dnd';
 import type { DropResult } from '@hello-pangea/dnd';
@@ -7,6 +7,7 @@ import { useQuestStore } from '../useQuestStore';
 import { QuestState } from '../types';
 import { QuestCard } from './QuestCard';
 import { PartyActivityFeed } from '../../parties/components/PartyActivityFeed';
+import { usePartyHub } from '../../../hooks/usePartyHub';
 
 const COLUMNS = [
   { id: QuestState.Pending.toString(), i18nKey: 'quest.board.columns.pending' },
@@ -16,8 +17,23 @@ const COLUMNS = [
 
 export const QuestBoard = () => {
   const { t } = useTranslation();
-  const { quests, updateQuestState } = useQuestStore();
+  const { quests, updateQuestState, setQuestStateLocal } = useQuestStore();
   const [xpPopup, setXpPopup] = useState<{ visible: boolean; xp: number }>({ visible: false, xp: 0 });
+
+  const connection = usePartyHub('mock-party-id', 'mock-token');
+
+  useEffect(() => {
+    if (!connection) return;
+    const onQuestUpdated = (payload: any) => {
+      if (payload.sourceUserId === '11111111-1111-1111-1111-111111111111') return; // Ignore our own updates
+      const newState = QuestState[payload.newState as keyof typeof QuestState];
+      if (newState !== undefined) {
+        setQuestStateLocal(payload.questId, newState as unknown as QuestState);
+      }
+    };
+    connection.on('QuestUpdated', onQuestUpdated);
+    return () => { connection.off('QuestUpdated', onQuestUpdated); };
+  }, [connection, setQuestStateLocal]);
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -86,7 +102,7 @@ export const QuestBoard = () => {
           })}
           </div>
           <div className="w-80 shrink-0">
-            <PartyActivityFeed />
+            <PartyActivityFeed connection={connection} />
           </div>
         </div>
       </DragDropContext>

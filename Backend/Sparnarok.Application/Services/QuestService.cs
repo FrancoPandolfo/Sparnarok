@@ -12,10 +12,12 @@ namespace Sparnarok.Application.Services;
 public class QuestService : IQuestService
 {
     private readonly ISparnarokDbContext _context;
+    private readonly IRealTimeNotificationService _notificationService;
 
-    public QuestService(ISparnarokDbContext context)
+    public QuestService(ISparnarokDbContext context, IRealTimeNotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<Quest> CreateQuestAsync(CreateQuestDto dto)
@@ -67,14 +69,16 @@ public class QuestService : IQuestService
 
         quest.State = newState;
 
+        Sparnarok.Core.Entities.User user = null;
+        decimal totalMultiplier = 1.0m;
+
         if (newState == QuestState.Completed)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
             
             // Calculate XP Multiplier based on Party tags
             var party = await _context.Parties.FirstOrDefaultAsync(p => p.Id == quest.PartyId);
             var multipliers = party?.TagMultipliers ?? new System.Collections.Generic.Dictionary<string, decimal>();
-            decimal totalMultiplier = 1.0m;
             if (quest.Tags != null)
             {
                 foreach(var tag in quest.Tags)
@@ -119,6 +123,15 @@ public class QuestService : IQuestService
         }
 
         await _context.SaveChangesAsync();
+
+        await _notificationService.NotifyQuestUpdatedAsync(quest.PartyId, quest.Id, newState.ToString(), userId);
+
+        if (newState == QuestState.Completed && user != null)
+        {
+            var totalXpGained = (int)Math.Round(quest.Rewards.Sum(r => r.XpAmount) * totalMultiplier, MidpointRounding.AwayFromZero);
+            await _notificationService.NotifyNewActivityAsync(quest.PartyId, $"{user.Username} completó '{quest.Title}'", totalXpGained);
+        }
+
         return quest;
     }
 }

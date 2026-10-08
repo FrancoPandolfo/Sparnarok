@@ -3,6 +3,16 @@ import { describe, it, expect } from 'vitest';
 import { QuestBoard } from './QuestBoard';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../../i18n';
+import { vi } from 'vitest';
+
+vi.mock('../../../hooks/usePartyHub', () => ({
+  usePartyHub: vi.fn(() => ({
+    on: vi.fn(),
+    off: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+  }))
+}));
 
 describe('QuestBoard', () => {
   it('renders all three columns with correct translations in Spanish', () => {

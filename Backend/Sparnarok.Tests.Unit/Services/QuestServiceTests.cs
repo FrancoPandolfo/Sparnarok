@@ -37,7 +37,8 @@ public class QuestServiceTests
     {
         // Arrange
         using var context = GetDbContext();
-        var service = new QuestService(context);
+        var mockNotificationService = new Moq.Mock<IRealTimeNotificationService>();
+        var service = new QuestService(context, mockNotificationService.Object);
         
         var dto = new CreateQuestDto
         {
@@ -69,7 +70,8 @@ public class QuestServiceTests
     {
         // Arrange
         using var context = GetDbContext();
-        var service = new QuestService(context);
+        var mockNotificationService = new Moq.Mock<IRealTimeNotificationService>();
+        var service = new QuestService(context, mockNotificationService.Object);
         
         var userId = Guid.NewGuid();
         var user = new Sparnarok.Core.Entities.User { Id = userId, Username = "Hero", TotalXp = 10 };
@@ -107,7 +109,8 @@ public class QuestServiceTests
     {
         // Arrange
         using var context = GetDbContext();
-        var service = new QuestService(context);
+        var mockNotificationService = new Moq.Mock<IRealTimeNotificationService>();
+        var service = new QuestService(context, mockNotificationService.Object);
         
         var userId = Guid.NewGuid();
         var skillId = Guid.NewGuid();
@@ -149,7 +152,8 @@ public class QuestServiceTests
         // Arrange
         var partyId = Guid.NewGuid();
         using var context = GetDbContext(partyId);
-        var service = new QuestService(context);
+        var mockNotificationService = new Moq.Mock<IRealTimeNotificationService>();
+        var service = new QuestService(context, mockNotificationService.Object);
         
         var userId = Guid.NewGuid();
         var skillId = Guid.NewGuid();
