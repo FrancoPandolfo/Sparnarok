@@ -12,6 +12,8 @@ public class QuestBoardTests : PageTest
     public async Task DragQuestToCompleted_ShouldShowXpPopupAndUpdateRank()
     {
         // Navegamos al frontend. Asumimos el puerto 5174 porque el 5173 quedó colgado en tu sesión.
+        await Page.GotoAsync("http://localhost:5174/login");
+        await Page.EvaluateAsync("window.localStorage.setItem('sparnarok-auth', '{\"state\":{\"token\":\"mock-token\",\"username\":\"Hero\"},\"version\":0}')");
         await Page.GotoAsync("http://localhost:5174/");
 
         // El usuario debe empezar como Novato (0 XP base simulada)

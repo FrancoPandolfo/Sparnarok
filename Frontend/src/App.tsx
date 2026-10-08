@@ -79,16 +79,22 @@ function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+import { LoginForm } from './features/auth/components/LoginForm';
+import { RegisterForm } from './features/auth/components/RegisterForm';
+import { ProtectedRoute } from './components/ProtectedRoute';
+
 export default function App() {
   return (
     <BrowserRouter>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<QuestBoard />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/party/dashboard" element={<DashboardPage />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        <Route path="/login" element={<LoginForm />} />
+        <Route path="/register" element={<RegisterForm />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/" element={<Layout><QuestBoard /></Layout>} />
+          <Route path="/profile" element={<Layout><ProfilePage /></Layout>} />
+          <Route path="/party/dashboard" element={<Layout><DashboardPage /></Layout>} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }

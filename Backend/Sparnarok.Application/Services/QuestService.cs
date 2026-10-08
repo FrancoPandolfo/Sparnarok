@@ -69,7 +69,7 @@ public class QuestService : IQuestService
 
         quest.State = newState;
 
-        Sparnarok.Core.Entities.User user = null;
+        Sparnarok.Core.Entities.User? user = null;
         decimal totalMultiplier = 1.0m;
 
         if (newState == QuestState.Completed)
