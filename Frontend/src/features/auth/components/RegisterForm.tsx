@@ -21,11 +21,28 @@ export const RegisterForm = () => {
         body: JSON.stringify({ email, username, password })
       });
       
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Error al registrarse');
+      let data: any = {};
+      const text = await response.text();
+      if (text) {
+        try {
+          data = JSON.parse(text);
+        } catch {
+          // Si falla el parseo, el contenido no era JSON, lo ignoramos
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al registrarse');
+      }
       
-      setAuth(data.token, data.username);
-      navigate('/');
+      // Auto-login con el token devuelto
+      if (data.token) {
+        setAuth(data.token, data.username || username);
+        navigate('/');
+      } else {
+        // Si no se devolvió token (fallback), redirigir al login
+        navigate('/login');
+      }
     } catch (err: any) {
       setError(err.message);
     }
