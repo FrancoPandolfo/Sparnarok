@@ -12,18 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// En Desarrollo usamos InMemory para evitar problemas de conexión/contraseña con Postgres local.
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services.AddDbContext<SparnarokDbContext>(options =>
-        options.UseInMemoryDatabase("SparnarokDev"));
-}
-else
-{
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=sparnarok;Username=postgres;Password=password";
-    builder.Services.AddDbContext<SparnarokDbContext>(options =>
-        options.UseNpgsql(connectionString));
-}
+// Volvemos a Postgres real ya que tenemos la password
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=sparnarok;Username=postgres;Password=password";
+
+builder.Services.AddDbContext<SparnarokDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
 builder.Services.AddScoped<ISparnarokDbContext>(provider => provider.GetRequiredService<SparnarokDbContext>());
 builder.Services.AddScoped<IQuestService, QuestService>();
