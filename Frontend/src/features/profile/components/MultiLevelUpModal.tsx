@@ -28,7 +28,7 @@ export const MultiLevelUpModal = ({ xpDistributed, unlockedNodes, onClose }: Pro
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: -20 }}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="bg-gray-900 border-2 border-amber-500/60 rounded-2xl p-7 max-w-lg w-full shadow-[0_0_60px_rgba(245,158,11,0.35)] relative overflow-hidden"
+        className="bg-gray-900 border-2 border-amber-500/60 rounded-2xl p-4 sm:p-7 w-[calc(100%-2rem)] md:w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-[0_0_60px_rgba(245,158,11,0.35)] relative"
       >
         {/* Particle sparkles in header */}
         <div className="flex flex-col items-center text-center space-y-3">

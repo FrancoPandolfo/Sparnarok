@@ -49,7 +49,7 @@ export const CreateQuestForm = ({ onClose }: Props) => {
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 max-w-lg w-full shadow-2xl relative">
+    <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 sm:p-6 w-[calc(100%-2rem)] md:w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl relative">
       {onClose && (
         <button 
           onClick={onClose} 
@@ -111,7 +111,7 @@ export const CreateQuestForm = ({ onClose }: Props) => {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-gray-300 text-sm font-bold mb-1">
               Dificultad

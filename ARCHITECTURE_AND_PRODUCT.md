@@ -38,3 +38,11 @@ Para soportar múltiples tenants y cálculos complejos sin degradar el rendimien
 El corazón del "juego" empresarial reside en la calibración y otorgamiento de recompensas técnicas:
 - **Flujo Transaccional de XP**: Mover una `Quest` a completada dispara el motor (e.g. `QuestService`) agregando experiencia específica a las ramas (`UserSkillProgression`) y elevando el `TotalXp`. El nivel se calcula derivado matemáticamente como `1 + (xp / 100)`.
 - **Sesión Cero**: Los líderes técnicos calibran el Seniority inicial de los desarrolladores usando un set de variables predefinidas (Trainee a Staff) lo cual acelera el *onboarding* corporativo mientras bloquea re-calibraciones fraudulentas mediante flags transaccionales (`IsSessionZeroCompleted`).
+
+## 📱 5. Diseño Responsivo (Mobile-First) y Fluidez
+Todos los componentes frontend deben ser fluidos y adaptarse a cualquier tamaño de pantalla utilizando las clases de utilidad de Tailwind CSS.
+
+- **Filosofía Mobile-First:** Los diseños por defecto en el código asumen pantallas pequeñas. Utilizar siempre los modificadores de breakpoint (`md:`, `lg:`, `xl:`) para expandir el layout en escritorio.
+- **Tableros y Grillas:** El `QuestBoard` debe soportar *scroll* horizontal (`overflow-x-auto flex-nowrap`) en móviles para preservar el ancho mínimo de las columnas sin comprimir las tarjetas. Los paneles de analíticas deben colapsar de múltiples columnas (`grid-cols-3`) a una sola (`grid-cols-1`) en resoluciones bajas.
+- **Navegación:** En móviles, colapsar menús extensos priorizando íconos o implementando menús hamburguesa. La información del Tenant (`Party`) y el usuario debe reducirse dinámicamente (`truncate`).
+- **Lienzos de Interacción:** Componentes como `ReactFlow` (Árbol de Habilidades) deben estar encapsulados en contenedores con dimensiones relativas (`w-full h-full`) y alturas mínimas estrictas (`min-h-[500px]`) para evitar colapsos a 0px, permitiendo el *pan* y *zoom* táctil en tablets y móviles.

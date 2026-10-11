@@ -76,7 +76,7 @@ export const InviteAllyModal = ({ onClose }: Props) => {
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
-        className="bg-gray-900 border border-gray-700 rounded-xl p-6 max-w-md w-full shadow-[0_0_40px_rgba(245,158,11,0.25)] relative"
+        className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6 w-[calc(100%-2rem)] md:w-full max-w-md max-h-[90vh] overflow-y-auto shadow-[0_0_40px_rgba(245,158,11,0.25)] relative"
       >
         <button 
           onClick={onClose} 
