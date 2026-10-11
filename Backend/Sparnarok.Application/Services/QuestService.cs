@@ -58,6 +58,7 @@ public class QuestService : IQuestService
     public async Task<Quest> UpdateQuestStatusAsync(Guid questId, QuestState newState, Guid userId)
     {
         var quest = await _context.Quests
+            .IgnoreQueryFilters()
             .Include(q => q.Rewards)
             .FirstOrDefaultAsync(q => q.Id == questId);
 
@@ -74,10 +75,10 @@ public class QuestService : IQuestService
 
         if (newState == QuestState.Completed)
         {
-            user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
             
             // Calculate XP Multiplier based on Party tags
-            var party = await _context.Parties.FirstOrDefaultAsync(p => p.Id == quest.PartyId);
+            var party = await _context.Parties.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == quest.PartyId);
             var multipliers = party?.TagMultipliers ?? new System.Collections.Generic.Dictionary<string, decimal>();
             if (quest.Tags != null)
             {
@@ -99,6 +100,7 @@ public class QuestService : IQuestService
                 foreach (var reward in quest.Rewards)
                 {
                     var progression = await _context.UserSkillProgressions
+                        .IgnoreQueryFilters()
                         .FirstOrDefaultAsync(p => p.UserId == userId && p.SkillCategoryId == reward.SkillCategoryId);
                     
                     if (progression == null)
@@ -126,10 +128,13 @@ public class QuestService : IQuestService
 
         await _notificationService.NotifyQuestUpdatedAsync(quest.PartyId, quest.Id, newState.ToString(), userId);
 
-        if (newState == QuestState.Completed && user != null)
+        if (newState == QuestState.Completed)
         {
-            var totalXpGained = (int)Math.Round(quest.Rewards.Sum(r => r.XpAmount) * totalMultiplier, MidpointRounding.AwayFromZero);
-            await _notificationService.NotifyNewActivityAsync(quest.PartyId, $"{user.Username} completó '{quest.Title}'", totalXpGained);
+            var heroName = user?.Username ?? "Un aliado";
+            var baseRewardXp = quest.Rewards != null && quest.Rewards.Any() ? quest.Rewards.Sum(r => r.XpAmount) : 100;
+            var totalXpGained = (int)Math.Round(baseRewardXp * totalMultiplier, MidpointRounding.AwayFromZero);
+            if (totalXpGained <= 0) totalXpGained = 100;
+            await _notificationService.NotifyNewActivityAsync(quest.PartyId, $"{heroName} completó '{quest.Title}'", totalXpGained);
         }
 
         return quest;

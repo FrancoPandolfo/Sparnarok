@@ -7,8 +7,10 @@ export const usePartyHub = (partyId: string, token: string | null) => {
   useEffect(() => {
     if (!partyId) return;
 
+    const cleanPartyId = partyId.trim();
+
     const newConnection = new signalR.HubConnectionBuilder()
-      .withUrl(`/api/partyHub`, {
+      .withUrl(`/api/partyHub?partyId=${cleanPartyId}`, {
         accessTokenFactory: () => token || ''
       })
       .withAutomaticReconnect()
@@ -22,6 +24,9 @@ export const usePartyHub = (partyId: string, token: string | null) => {
       connection.start()
         .then(() => {
           console.log('SignalR Connected to PartyHub');
+          if (partyId && typeof connection.invoke === 'function') {
+            connection.invoke('JoinPartyGroup', partyId).catch(() => {});
+          }
         })
         .catch(e => console.log('SignalR Connection failed: ', e));
 
@@ -29,7 +34,7 @@ export const usePartyHub = (partyId: string, token: string | null) => {
         connection.stop();
       };
     }
-  }, [connection]);
+  }, [connection, partyId]);
 
   return connection;
 };

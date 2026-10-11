@@ -12,7 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// En una app real, leeríamos de appsettings.json o variables de entorno.
+// Volvemos a Postgres real ya que tenemos la password
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Host=localhost;Database=sparnarok;Username=postgres;Password=password";
 
 builder.Services.AddDbContext<SparnarokDbContext>(options =>
@@ -65,6 +65,22 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    var tenantService = context.RequestServices.GetRequiredService<ITenantService>();
+    var partyIdClaim = context.User?.FindFirst("partyId")?.Value;
+    if (Guid.TryParse(partyIdClaim, out var partyId) && partyId != Guid.Empty)
+    {
+        tenantService.SetCurrentPartyId(partyId);
+    }
+    else if (context.Request.Headers.TryGetValue("X-Party-Id", out var headerPartyId) && Guid.TryParse(headerPartyId, out var parsedPartyId))
+    {
+        tenantService.SetCurrentPartyId(parsedPartyId);
+    }
+    await next();
+});
+
 app.MapControllers();
 app.MapHub<Sparnarok.Api.Hubs.PartyHub>("/api/partyHub");
 

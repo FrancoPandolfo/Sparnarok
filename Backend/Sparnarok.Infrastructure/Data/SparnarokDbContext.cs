@@ -23,6 +23,7 @@ public class SparnarokDbContext : DbContext, ISparnarokDbContext
     public DbSet<Party> Parties { get; set; }
     public DbSet<PartyMember> PartyMembers { get; set; }
     public DbSet<PartyWebhookEvent> PartyWebhookEvents { get; set; }
+    public DbSet<BoardColumn> BoardColumns { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +32,7 @@ public class SparnarokDbContext : DbContext, ISparnarokDbContext
         modelBuilder.Entity<Quest>().HasQueryFilter(e => e.PartyId == _tenantService.GetCurrentPartyId());
         modelBuilder.Entity<UserSkillProgression>().HasQueryFilter(e => e.PartyId == _tenantService.GetCurrentPartyId());
         modelBuilder.Entity<PartyWebhookEvent>().HasQueryFilter(e => e.PartyId == _tenantService.GetCurrentPartyId());
+        modelBuilder.Entity<BoardColumn>().HasQueryFilter(e => e.PartyId == _tenantService.GetCurrentPartyId());
 
         modelBuilder.Entity<Party>()
             .Property(p => p.TagMultipliers)

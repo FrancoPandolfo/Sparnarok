@@ -7,4 +7,5 @@ namespace Sparnarok.Application.Interfaces;
 public interface IProfileService
 {
     Task<UserProfileDto> GetUserProfileAsync(Guid userId);
+    Task<AutoDistributeResultDto> AutoDistributeXpAsync(Guid userId);
 }

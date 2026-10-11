@@ -17,6 +17,7 @@ vi.mock('@microsoft/signalr', () => {
         stop: stopMock,
         on: onMock,
         off: offMock,
+        invoke: vi.fn().mockResolvedValue(undefined)
       };
     }
   }

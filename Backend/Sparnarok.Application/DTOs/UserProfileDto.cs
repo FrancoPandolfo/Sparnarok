@@ -22,3 +22,20 @@ public class UserProfileDto
     public string Rank { get; set; } = string.Empty;
     public List<SkillProgressionDto> Skills { get; set; } = new();
 }
+
+public class AutoDistributeResultDto
+{
+    public Guid UserId { get; set; }
+    public int XpDistributed { get; set; }
+    public int RemainingXp { get; set; }
+    public List<UnlockedNodeDto> UnlockedNodes { get; set; } = new();
+    public UserProfileDto UpdatedProfile { get; set; } = null!;
+}
+
+public class UnlockedNodeDto
+{
+    public Guid SkillCategoryId { get; set; }
+    public string CategoryName { get; set; } = string.Empty;
+    public int NewLevel { get; set; }
+    public int CurrentXp { get; set; }
+}

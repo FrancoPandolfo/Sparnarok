@@ -29,4 +29,34 @@ public class ProfileController : ControllerBase
             return NotFound(new { message = ex.Message });
         }
     }
+
+    [HttpPost("skills/auto-distribute")]
+    public async Task<IActionResult> AutoDistributeSkills([FromQuery] Guid? userId)
+    {
+        try
+        {
+            var targetUserId = userId ?? Guid.Empty;
+            if (targetUserId == Guid.Empty)
+            {
+                var subClaim = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                    ?? User?.FindFirst("sub")?.Value;
+                if (Guid.TryParse(subClaim, out var parsedSub))
+                {
+                    targetUserId = parsedSub;
+                }
+            }
+
+            if (targetUserId == Guid.Empty)
+            {
+                return BadRequest(new { message = "Se requiere el identificador de usuario (userId)." });
+            }
+
+            var result = await _profileService.AutoDistributeXpAsync(targetUserId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

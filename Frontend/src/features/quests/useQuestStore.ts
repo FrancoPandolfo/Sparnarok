@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { QuestState, QuestDifficulty } from './types';
 import type { Quest, CreateQuestPayload } from './types';
+import { useAuthStore } from '../auth/useAuthStore';
 
 interface QuestStoreState {
   quests: Quest[];
@@ -81,9 +82,15 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
     }));
     
     try {
+      const token = useAuthStore.getState().token;
+      const partyId = useAuthStore.getState().partyId;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (partyId) headers['X-Party-Id'] = partyId;
+
       const response = await fetch(`/api/quests/${id}/status?userId=${userId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ state: newState })
       });
       if (!response.ok) throw new Error('API Error');
@@ -97,9 +104,15 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
   createQuest: async (payload: CreateQuestPayload) => {
     set({ isLoading: true, error: null });
     try {
+      const token = useAuthStore.getState().token;
+      const partyId = useAuthStore.getState().partyId;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (partyId) headers['X-Party-Id'] = partyId;
+
       const response = await fetch('/api/quests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload)
       });
 
