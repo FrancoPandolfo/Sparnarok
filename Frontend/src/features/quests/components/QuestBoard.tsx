@@ -206,7 +206,7 @@ export const QuestBoard = () => {
   };
 
   return (
-    <div className="p-6 h-full flex flex-col relative bg-gray-900 min-h-screen">
+    <div className="p-4 sm:p-6 h-full flex flex-col relative bg-gray-900 min-h-screen">
       <AnimatePresence>
         {xpPopup.visible && (
           <motion.div
@@ -221,14 +221,15 @@ export const QuestBoard = () => {
       </AnimatePresence>
 
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className="flex gap-6 h-full flex-grow overflow-x-auto pb-4">
-          <div className="flex flex-1 gap-6 min-w-0">
+        <div className="flex flex-col lg:flex-row gap-6 h-full flex-grow pb-4">
+          {/* Columns Container: horizontal scrolling */}
+          <div className="flex flex-1 gap-4 sm:gap-6 min-w-0 overflow-x-auto pb-4">
             {columns.map((col) => {
               const colQuests = quests.filter(q => q.state.toString() === col.id);
               const isEditingThis = editingColId === col.id;
 
               return (
-                <div key={col.id} className="flex flex-col w-80 shrink-0 bg-gray-950 border border-gray-800 rounded-xl p-4 shadow-md">
+                <div key={col.id} className="flex flex-col w-[280px] sm:w-80 min-w-[280px] shrink-0 bg-gray-950 border border-gray-800 rounded-xl p-4 shadow-md">
                   {/* Column Header */}
                   <div className="flex items-center justify-between mb-4 relative">
                     {isEditingThis ? (
@@ -328,7 +329,7 @@ export const QuestBoard = () => {
             })}
 
             {/* Nueva Columna Button */}
-            <div className="w-64 shrink-0 flex items-start">
+            <div className="w-64 min-w-[240px] shrink-0 flex items-start">
               <button
                 onClick={() => setShowAddColumnModal(true)}
                 className="w-full py-4 border-2 border-dashed border-gray-800 hover:border-amber-500/50 hover:bg-gray-950/60 text-gray-400 hover:text-amber-400 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
@@ -340,7 +341,7 @@ export const QuestBoard = () => {
           </div>
 
           {/* Activity Feed Sidebar */}
-          <div className="w-80 shrink-0">
+          <div className="w-full lg:w-80 shrink-0">
             <PartyActivityFeed connection={connection} />
           </div>
         </div>
