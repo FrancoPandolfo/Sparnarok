@@ -26,20 +26,27 @@ export const PartyActivityFeed = ({ connection }: Props) => {
     if (!connection) return;
 
     const onNewActivity = (payload: any) => {
-      setFeed(prev => [
-        { 
-          id: payload.id || Date.now().toString(), 
-          type: 'quest_completed', 
-          user: 'Party Member', 
-          action: payload.message || 'completó una Quest', 
-          time: 'Ahora' 
-        },
-        ...prev.slice(0, 4)
-      ]);
+      const message = payload?.message || payload?.Message || 'completó una Quest';
+      const xp = payload?.xp || payload?.Xp || 0;
+      const id = payload?.id || payload?.Id || Date.now().toString();
+      const user = payload?.user || payload?.User || (message ? message.split(' ')[0] : 'Aliado');
+
+      const newItem: FeedItem = {
+        id,
+        type: 'quest_completed',
+        user,
+        action: xp > 0 ? `${message} (+${xp} XP)` : message,
+        time: 'Ahora'
+      };
+
+      // Stale Closure Fix: Always use functional updater callback
+      setFeed(prev => [newItem, ...(prev || []).slice(0, 9)]);
     };
 
     connection.on('NewPartyActivity', onNewActivity);
-    return () => { connection.off('NewPartyActivity', onNewActivity); };
+    return () => { 
+      connection.off('NewPartyActivity', onNewActivity); 
+    };
   }, [connection]);
 
   return (

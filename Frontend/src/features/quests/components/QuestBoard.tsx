@@ -90,10 +90,16 @@ export const QuestBoard = () => {
   useEffect(() => {
     if (!connection) return;
     const onQuestUpdated = (payload: any) => {
-      if (payload.sourceUserId === userId) return; // Ignore our own updates
-      const newState = QuestState[payload.newState as keyof typeof QuestState];
-      if (newState !== undefined) {
-        setQuestStateLocal(payload.questId, newState as unknown as QuestState);
+      const sourceUserId = payload?.sourceUserId || payload?.SourceUserId;
+      if (sourceUserId && sourceUserId === userId) return;
+
+      const rawState = payload?.newState ?? payload?.NewState;
+      const questId = payload?.questId || payload?.QuestId;
+      if (!questId) return;
+
+      const newState = QuestState[rawState as keyof typeof QuestState] ?? (typeof rawState === 'number' ? rawState : parseInt(rawState));
+      if (newState !== undefined && !isNaN(newState)) {
+        setQuestStateLocal(questId, newState as unknown as QuestState);
       }
     };
     connection.on('QuestUpdated', onQuestUpdated);

@@ -73,9 +73,9 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col bg-gray-950">
+    <div className="w-full h-full min-h-[calc(100vh-65px)] flex flex-col bg-gray-950">
       {/* Top Banner with Controls */}
-      <div className="p-4 px-6 bg-gray-950 border-b border-gray-800 flex flex-wrap items-center justify-between gap-4">
+      <div className="p-4 px-6 bg-gray-950 border-b border-gray-800 flex flex-wrap items-center justify-between gap-4 shrink-0">
         <div>
           <h2 className="text-xl font-bold text-amber-500 flex items-center gap-2">
             <Sparkles size={20} className="text-amber-400" />
@@ -86,7 +86,7 @@ export const ProfilePage = () => {
           </p>
         </div>
 
-        {/* Feature 4: Controls (Auto-Leveling Switch & Smart Bulk Unlock Button) */}
+        {/* Controls (Auto-Leveling Switch & Smart Bulk Unlock Button) */}
         <div className="flex items-center gap-5">
           {/* Auto-Leveling Switch */}
           <div className="flex items-center gap-3 bg-gray-900 border border-gray-800 px-3.5 py-2 rounded-xl shadow-sm">
@@ -137,8 +137,8 @@ export const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Interactive Skill Tree Canvas */}
-      <div className="flex-1 relative">
+      {/* Interactive Skill Tree Canvas: Strict explicit dimensions w-full h-full min-h-[600px] flex-1 */}
+      <div className="w-full h-full min-h-[600px] flex-1 relative">
         <SkillTree unlockedNodeIds={unlockedNodeNames} />
       </div>
 

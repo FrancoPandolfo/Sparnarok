@@ -29,6 +29,7 @@ export const CustomRulesTab = ({ isPremium }: Props) => {
 
   return (
     <div className="relative p-6 bg-gray-950 border border-gray-800 rounded-xl overflow-hidden mt-6">
+      {/* Rules form container with pointer-events-none and opacity-50 ONLY when !isPremium */}
       <div className={`transition-opacity duration-300 ${!isPremium ? 'opacity-50 pointer-events-none' : ''}`}>
         <h3 className="text-2xl font-bold text-amber-500 mb-4">{t('rules.title', 'Reglas Custom (Multiplicadores de XP)')}</h3>
         
@@ -60,6 +61,7 @@ export const CustomRulesTab = ({ isPremium }: Props) => {
                 className="bg-gray-900 border border-gray-700 text-amber-400 font-mono rounded p-2 w-24"
               />
               <button 
+                type="button"
                 disabled={!isPremium} 
                 onClick={() => setRules(rules.filter((_, i) => i !== idx))}
                 className="text-red-400 p-2 hover:bg-gray-800 rounded"
@@ -72,6 +74,7 @@ export const CustomRulesTab = ({ isPremium }: Props) => {
 
         <div className="flex gap-4">
           <button 
+            type="button"
             disabled={!isPremium} 
             onClick={() => setRules([...rules, { tag: '', multiplier: 1 }])}
             className="flex items-center gap-2 text-indigo-400 font-bold px-4 py-2 hover:bg-gray-900 rounded"
@@ -79,6 +82,7 @@ export const CustomRulesTab = ({ isPremium }: Props) => {
             <Plus size={16} /> {t('rules.addRule', 'Añadir Regla')}
           </button>
           <button 
+            type="button"
             disabled={!isPremium} 
             onClick={handleSave}
             className="flex items-center gap-2 bg-amber-500 text-gray-900 font-bold px-4 py-2 hover:bg-amber-600 rounded ml-auto"
@@ -88,20 +92,25 @@ export const CustomRulesTab = ({ isPremium }: Props) => {
         </div>
       </div>
 
+      {/* Paywall overlay with pointer-events-auto and z-50 to ensure button is clickable */}
       {!isPremium && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+        <div className="absolute inset-0 z-50 pointer-events-auto flex items-center justify-center bg-gray-950/80 backdrop-blur-sm">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-900 border border-amber-500/30 p-8 rounded-2xl shadow-2xl max-w-lg text-center"
+            className="bg-gray-900 border border-amber-500/30 p-8 rounded-2xl shadow-2xl max-w-lg text-center pointer-events-auto relative z-10"
           >
             <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Lock className="text-amber-500" size={32} />
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2">{t('paywall.title', 'Desbloquea las Reglas Custom')}</h2>
-            <p className="text-gray-400 mb-6">{t('paywall.subtitle', 'Potencia el progreso de tu equipo personalizando cómo se otorga la experiencia. Exclusivo para planes Pro.')}</p>
-            <button className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-gray-900 font-bold rounded-lg shadow-lg hover:shadow-amber-500/25 transition-all">
-              {t('paywall.cta', 'Desbloquea Sparnarok Pro')}
+            <h2 className="text-2xl font-bold text-white mb-2">{t('rules.paywallTitle', 'Desbloquea las Reglas Custom')}</h2>
+            <p className="text-gray-400 mb-6">{t('rules.paywallSubtitle', 'Potencia el progreso de tu equipo personalizando cómo se otorga la experiencia. Exclusivo para planes Pro.')}</p>
+            <button 
+              type="button"
+              onClick={() => alert("Sparnarok Pro: Solicita a tu manager ascender al gremio Pro")}
+              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-gray-900 font-bold rounded-lg shadow-lg hover:shadow-amber-500/25 transition-all pointer-events-auto cursor-pointer"
+            >
+              {t('rules.paywallCta', 'Desbloquea Sparnarok Pro')}
             </button>
           </motion.div>
         </div>
