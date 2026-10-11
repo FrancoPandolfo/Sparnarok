@@ -75,6 +75,38 @@ namespace Sparnarok.Infrastructure.Migrations
                     b.ToTable("Parties");
                 });
 
+            modelBuilder.Entity("Sparnarok.Core.Entities.PartyInvitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("InviteeEmail")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("InviterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PartyId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("InviterId");
+
+                    b.HasIndex("PartyId");
+
+                    b.ToTable("PartyInvitations");
+                });
+
             modelBuilder.Entity("Sparnarok.Core.Entities.PartyMember", b =>
                 {
                     b.Property<Guid>("Id")
@@ -288,6 +320,25 @@ namespace Sparnarok.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserSkillProgressions");
+                });
+
+            modelBuilder.Entity("Sparnarok.Core.Entities.PartyInvitation", b =>
+                {
+                    b.HasOne("Sparnarok.Core.Entities.User", "Inviter")
+                        .WithMany()
+                        .HasForeignKey("InviterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sparnarok.Core.Entities.Party", "Party")
+                        .WithMany()
+                        .HasForeignKey("PartyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Inviter");
+
+                    b.Navigation("Party");
                 });
 
             modelBuilder.Entity("Sparnarok.Core.Entities.PartyMember", b =>

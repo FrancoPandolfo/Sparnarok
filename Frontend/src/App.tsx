@@ -4,8 +4,10 @@ import { ProfilePage } from './pages/ProfilePage';
 import { DashboardPage } from './pages/DashboardPage';
 import { CreateQuestForm } from './features/quests/components/CreateQuestForm';
 import { useQuestStore } from './features/quests/useQuestStore';
-import { User as UserIcon, Swords, Users, BarChart, LogOut, Copy, Check, Shield } from 'lucide-react';
+import { User as UserIcon, Swords, Users, BarChart, LogOut } from 'lucide-react';
 import { InviteAllyModal } from './features/parties/components/InviteAllyModal';
+import { WorkspaceSwitcher } from './features/parties/components/WorkspaceSwitcher';
+import { NotificationBell } from './features/parties/components/NotificationBell';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from './features/auth/useAuthStore';
@@ -18,21 +20,9 @@ function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   const username = useAuthStore(state => state.username);
-  const partyId = useAuthStore(state => state.partyId);
-  const partyName = useAuthStore(state => state.partyName);
   const logout = useAuthStore(state => state.logout);
 
   const [showInviteModal, setShowInviteModal] = useState(false);
-  const [copiedPartyId, setCopiedPartyId] = useState(false);
-
-  const handleCopyPartyId = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (partyId) {
-      navigator.clipboard.writeText(partyId);
-      setCopiedPartyId(true);
-      setTimeout(() => setCopiedPartyId(false), 2000);
-    }
-  };
 
   const handleLogout = () => {
     logout();
@@ -94,29 +84,13 @@ function Layout({ children }: { children: React.ReactNode }) {
           </nav>
         </div>
 
-        {/* Right Section: Party Tenant info + Hero Profile + Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
-          {/* Party (Tenant) Indicator */}
-          <div className="hidden sm:flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs max-w-xs">
-            <Shield size={14} className="text-amber-400 shrink-0" />
-            <div className="flex flex-col min-w-0">
-              <span className="font-bold text-gray-200 truncate max-w-[100px] md:max-w-[140px]" title={partyName || 'Party'}>
-                {partyName || 'Party Activa'}
-              </span>
-              <span className="font-mono text-[10px] text-gray-400 truncate max-w-[100px] md:max-w-[140px]" title={partyId || ''}>
-                ID: {partyId ? `${partyId.slice(0, 8)}...` : 'N/A'}
-              </span>
-            </div>
-            {partyId && (
-              <button
-                onClick={handleCopyPartyId}
-                title="Copiar Party ID"
-                className="text-gray-400 hover:text-amber-400 ml-1 p-1 rounded hover:bg-gray-800 transition-colors shrink-0"
-              >
-                {copiedPartyId ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
-              </button>
-            )}
-          </div>
+        {/* Right Section: Workspace Switcher + Notifications + Invite Ally + Hero Profile + Actions */}
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+          {/* Interactive Workspace (Party) Switcher Dropdown */}
+          <WorkspaceSwitcher />
+
+          {/* Notifications Center (Campanita) */}
+          <NotificationBell />
 
           {/* Invite Ally Button */}
           <button 

@@ -9,6 +9,7 @@ import { QuestState } from '../types';
 import { QuestCard } from './QuestCard';
 import { CreateQuestForm } from './CreateQuestForm';
 import { PartyActivityFeed } from '../../parties/components/PartyActivityFeed';
+import { useFeedStore } from '../../parties/useFeedStore';
 import { usePartyHub } from '../../../hooks/usePartyHub';
 import { useAuthStore } from '../../auth/useAuthStore';
 
@@ -31,6 +32,7 @@ export const QuestBoard = () => {
   const token = useAuthStore(state => state.token);
   const partyId = useAuthStore(state => state.partyId) || 'party1';
   const userId = useAuthStore(state => state.userId) || '11111111-1111-1111-1111-111111111111';
+  const username = useAuthStore(state => state.username);
 
   const [columns, setColumns] = useState<ColumnItem[]>(DEFAULT_COLUMNS);
   const [xpPopup, setXpPopup] = useState<{ visible: boolean; xp: number }>({ visible: false, xp: 0 });
@@ -125,6 +127,16 @@ export const QuestBoard = () => {
         setXpPopup({ visible: true, xp });
         setTimeout(() => setXpPopup({ visible: false, xp: 0 }), 2500);
       }
+
+      // Optimistic Reactive Feed: immediately reflect the user's action
+      const questTitle = quest?.title || 'una Quest';
+      useFeedStore.getState().addActivity({
+        id: `optimistic-${Date.now()}-${questId}`,
+        type: 'quest_completed',
+        user: username || 'Tú',
+        action: `¡Has completado '${questTitle}' y ganado +${xp} XP!`,
+        time: 'Ahora'
+      });
     }
   };
 

@@ -1,15 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, ArrowUpCircle } from 'lucide-react';
-
-interface FeedItem {
-  id: string;
-  type: 'quest_completed' | 'level_up';
-  user: string;
-  action: string;
-  time: string;
-}
+import { useFeedStore, type FeedItem } from '../useFeedStore';
 
 interface Props {
   connection?: any;
@@ -17,10 +10,8 @@ interface Props {
 
 export const PartyActivityFeed = ({ connection }: Props) => {
   const { t } = useTranslation();
-  const [feed, setFeed] = useState<FeedItem[]>([
-    { id: '1', type: 'quest_completed', user: 'Mery', action: t('feed.questAction', "completó 'Migrar DB' (+100 XP)"), time: 'Hace 5m' },
-    { id: '2', type: 'level_up', user: 'Alex', action: t('feed.levelAction', 'subió a Rango 3 en Backend'), time: 'Hace 12m' }
-  ]);
+  const feed = useFeedStore(state => state.feed);
+  const addActivity = useFeedStore(state => state.addActivity);
 
   useEffect(() => {
     if (!connection) return;
@@ -39,15 +30,14 @@ export const PartyActivityFeed = ({ connection }: Props) => {
         time: 'Ahora'
       };
 
-      // Stale Closure Fix: Always use functional updater callback
-      setFeed(prev => [newItem, ...(prev || []).slice(0, 9)]);
+      addActivity(newItem);
     };
 
     connection.on('NewPartyActivity', onNewActivity);
     return () => { 
       connection.off('NewPartyActivity', onNewActivity); 
     };
-  }, [connection]);
+  }, [connection, addActivity]);
 
   return (
     <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 flex flex-col h-full overflow-hidden">
