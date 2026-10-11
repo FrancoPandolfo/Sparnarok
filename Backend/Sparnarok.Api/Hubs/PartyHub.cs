@@ -18,21 +18,40 @@ public class PartyHub : Hub
 
     public override async Task OnConnectedAsync()
     {
-        var partyId = _tenantService.GetCurrentPartyId();
-        if (partyId != Guid.Empty)
+        var partyIdClaim = Context.User?.FindFirst("partyId")?.Value;
+        if (Guid.TryParse(partyIdClaim, out var partyId) && partyId != Guid.Empty)
         {
+            _tenantService.SetCurrentPartyId(partyId);
             await Groups.AddToGroupAsync(Context.ConnectionId, $"party-{partyId}");
         }
+        else
+        {
+            var fallbackPartyId = _tenantService.GetCurrentPartyId();
+            if (fallbackPartyId != Guid.Empty)
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"party-{fallbackPartyId}");
+            }
+        }
+
         await base.OnConnectedAsync();
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var partyId = _tenantService.GetCurrentPartyId();
-        if (partyId != Guid.Empty)
+        var partyIdClaim = Context.User?.FindFirst("partyId")?.Value;
+        if (Guid.TryParse(partyIdClaim, out var partyId) && partyId != Guid.Empty)
         {
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"party-{partyId}");
         }
+        else
+        {
+            var fallbackPartyId = _tenantService.GetCurrentPartyId();
+            if (fallbackPartyId != Guid.Empty)
+            {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"party-{fallbackPartyId}");
+            }
+        }
+
         await base.OnDisconnectedAsync(exception);
     }
 }

@@ -18,30 +18,98 @@ public class PartiesController : ControllerBase
         _context = context;
     }
 
+    [HttpGet("{partyId}")]
+    public async Task<IActionResult> GetPartyDetails(Guid partyId)
+    {
+        var party = await _context.Parties.IgnoreQueryFilters().Include(p => p.Members).FirstOrDefaultAsync(p => p.Id == partyId);
+        if (party == null) return NotFound();
+        return Ok(new { id = party.Id, name = party.Name, isPremium = party.IsPremium, memberCount = party.Members.Count });
+    }
+
     [HttpPost("{partyId}/invite")]
     public async Task<IActionResult> InviteToParty(Guid partyId, [FromBody] InviteDto dto)
     {
-        var party = await _context.Parties.Include(p => p.Members).FirstOrDefaultAsync(p => p.Id == partyId);
+        var party = await _context.Parties.IgnoreQueryFilters().Include(p => p.Members).FirstOrDefaultAsync(p => p.Id == partyId);
         
-        if (party == null) return NotFound();
+        if (party == null) return NotFound(new { message = "Party no encontrada" });
+
+        var targetUserId = dto.UserId;
+        if (targetUserId == Guid.Empty)
+        {
+            var user = await _context.Users.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => (!string.IsNullOrEmpty(dto.Email) && u.Email == dto.Email) ||
+                                          (!string.IsNullOrEmpty(dto.Username) && u.Username == dto.Username) ||
+                                          (!string.IsNullOrEmpty(dto.Email) && u.Username == dto.Email));
+            if (user == null)
+            {
+                return NotFound(new { message = "Héroe no encontrado por email o username." });
+            }
+            targetUserId = user.Id;
+        }
+
+        var existingMember = await _context.PartyMembers.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(pm => pm.PartyId == partyId && pm.UserId == targetUserId);
+
+        if (existingMember != null)
+        {
+            return Ok(new { message = "El usuario ya forma parte de esta Party", partyId = party.Id, partyName = party.Name });
+        }
 
         if (!party.IsPremium && party.Members.Count >= 3)
         {
             return StatusCode(403, new { code = "ERR_PARTY_LIMIT_REACHED", message = "Límite de miembros alcanzado en plan gratuito." });
         }
 
-        var newMember = new PartyMember
-        {
-            Id = Guid.NewGuid(),
-            PartyId = partyId,
-            UserId = dto.UserId,
-            JoinedAt = DateTime.UtcNow
-        };
+        var previousMembership = await _context.PartyMembers.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(pm => pm.UserId == targetUserId);
 
-        _context.PartyMembers.Add(newMember);
+        if (previousMembership != null)
+        {
+            previousMembership.PartyId = partyId;
+            previousMembership.Role = "Member";
+        }
+        else
+        {
+            var newMember = new PartyMember
+            {
+                Id = Guid.NewGuid(),
+                PartyId = partyId,
+                UserId = targetUserId,
+                Role = "Member",
+                JoinedAt = DateTime.UtcNow
+            };
+            _context.PartyMembers.Add(newMember);
+        }
+
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Usuario invitado con éxito" });
+        return Ok(new { message = "Usuario invitado con éxito", partyId = party.Id, partyName = party.Name });
+    }
+
+    [HttpPost("{partyId}/join")]
+    public async Task<IActionResult> JoinParty(Guid partyId, [FromQuery] Guid userId)
+    {
+        var party = await _context.Parties.IgnoreQueryFilters().Include(p => p.Members).FirstOrDefaultAsync(p => p.Id == partyId);
+        if (party == null) return NotFound(new { message = "Party no encontrada" });
+
+        var membership = await _context.PartyMembers.IgnoreQueryFilters().FirstOrDefaultAsync(pm => pm.UserId == userId);
+        if (membership != null)
+        {
+            membership.PartyId = partyId;
+        }
+        else
+        {
+            _context.PartyMembers.Add(new PartyMember
+            {
+                Id = Guid.NewGuid(),
+                PartyId = partyId,
+                UserId = userId,
+                Role = "Member",
+                JoinedAt = DateTime.UtcNow
+            });
+        }
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Te has unido a la Party", partyId = party.Id, partyName = party.Name });
     }
 
     [HttpGet("{partyId}/analytics")]
@@ -161,5 +229,7 @@ public class PartiesController : ControllerBase
 
 public class InviteDto
 {
-    public Guid UserId { get; set; }
+    public Guid UserId { get; set; } = Guid.Empty;
+    public string? Email { get; set; }
+    public string? Username { get; set; }
 }

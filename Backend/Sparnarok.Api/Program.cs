@@ -65,6 +65,22 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    var tenantService = context.RequestServices.GetRequiredService<ITenantService>();
+    var partyIdClaim = context.User?.FindFirst("partyId")?.Value;
+    if (Guid.TryParse(partyIdClaim, out var partyId) && partyId != Guid.Empty)
+    {
+        tenantService.SetCurrentPartyId(partyId);
+    }
+    else if (context.Request.Headers.TryGetValue("X-Party-Id", out var headerPartyId) && Guid.TryParse(headerPartyId, out var parsedPartyId))
+    {
+        tenantService.SetCurrentPartyId(parsedPartyId);
+    }
+    await next();
+});
+
 app.MapControllers();
 app.MapHub<Sparnarok.Api.Hubs.PartyHub>("/api/partyHub");
 

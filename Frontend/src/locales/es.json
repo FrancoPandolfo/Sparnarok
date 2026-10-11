@@ -1,4 +1,23 @@
 {
+  "auth": {
+    "login": {
+      "submit": "Entrar a la Party",
+      "loading": "Entrando a la Party..."
+    },
+    "register": {
+      "submit": "Crear Héroe",
+      "loading": "Forjando Héroe..."
+    }
+  },
+  "header": {
+    "board": "Tablero",
+    "profile": "Perfil Habilidades",
+    "analytics": "Analytics",
+    "invite": "Invitar",
+    "logout": "Cerrar Sesión",
+    "party": "Party Activa",
+    "partyId": "Party ID"
+  },
   "quest": {
     "create": {
       "title": "Forjar una Nueva Quest",
@@ -14,8 +33,20 @@
         "inProgress": "En Progreso",
         "completed": "Completada"
       },
-      "xpGained": "¡+{{xp}} XP Ganada!"
+      "xpGained": "¡+{{xp}} XP Ganada!",
+      "addColumn": "Nueva Columna",
+      "addQuest": "+ Añadir Quest",
+      "editColumn": "Editar Nombre",
+      "deleteColumn": "Eliminar Columna",
+      "newColumnTitle": "Nueva Columna"
     }
+  },
+  "profile": {
+    "autoLeveling": "Auto-Leveling",
+    "autoLevelingDesc": "Asignación automática de XP",
+    "bulkUnlock": "Distribuir XP Acumulada",
+    "bulkUnlockSuccess": "¡XP distribuida exitosamente!",
+    "levelUpCelebration": "¡LEVEL UP MÚLTIPLE!"
   },
   "paywall": {
     "title": "Ascensión Pro Requerida",
@@ -53,12 +84,10 @@
     "title": "Reglas Custom (Multiplicadores de XP)",
     "tagPlaceholder": "Ej: Bug Crítico",
     "addRule": "Añadir Regla",
-    "saveRules": "Guardar Reglas"
-  },
-  "paywall": {
-    "title": "Desbloquea las Reglas Custom",
-    "subtitle": "Potencia el progreso de tu equipo personalizando cómo se otorga la experiencia. Exclusivo para planes Pro.",
-    "cta": "Desbloquea Sparnarok Pro"
+    "saveRules": "Guardar Reglas",
+    "paywallTitle": "Desbloquea las Reglas Custom",
+    "paywallSubtitle": "Potencia el progreso de tu equipo personalizando cómo se otorga la experiencia. Exclusivo para planes Pro.",
+    "paywallCta": "Desbloquea Sparnarok Pro"
   },
   "integrations": {
     "title": "Git Webhooks",

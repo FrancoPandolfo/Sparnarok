@@ -15,6 +15,7 @@ public interface ISparnarokDbContext
     DbSet<Party> Parties { get; set; }
     DbSet<PartyMember> PartyMembers { get; set; }
     DbSet<PartyWebhookEvent> PartyWebhookEvents { get; set; }
+    DbSet<BoardColumn> BoardColumns { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

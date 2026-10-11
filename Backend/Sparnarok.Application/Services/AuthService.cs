@@ -63,10 +63,23 @@ public class AuthService : IAuthService
         };
         _context.PartyMembers.Add(member);
 
+        _context.BoardColumns.AddRange(new[]
+        {
+            new BoardColumn { Id = Guid.NewGuid(), PartyId = partyId, Name = "Pendiente", Order = 0, CreatedAt = DateTime.UtcNow },
+            new BoardColumn { Id = Guid.NewGuid(), PartyId = partyId, Name = "En Progreso", Order = 1, CreatedAt = DateTime.UtcNow },
+            new BoardColumn { Id = Guid.NewGuid(), PartyId = partyId, Name = "Completada", Order = 2, CreatedAt = DateTime.UtcNow }
+        });
+
         await _context.SaveChangesAsync();
 
         var token = GenerateJwtToken(user, partyId);
-        return new AuthResultDto { Token = token, Username = user.Username };
+        return new AuthResultDto 
+        { 
+            Token = token, 
+            Username = user.Username,
+            PartyId = partyId,
+            PartyName = party.Name
+        };
     }
 
     public async Task<AuthResultDto> LoginAsync(LoginDto dto)
@@ -79,9 +92,19 @@ public class AuthService : IAuthService
 
         var member = await _context.PartyMembers.IgnoreQueryFilters().FirstOrDefaultAsync(m => m.UserId == user.Id);
         var partyId = member?.PartyId ?? Guid.Empty;
+        var party = partyId != Guid.Empty
+            ? await _context.Parties.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == partyId)
+            : null;
+        var partyName = party?.Name ?? "Mi Party";
 
         var token = GenerateJwtToken(user, partyId);
-        return new AuthResultDto { Token = token, Username = user.Username };
+        return new AuthResultDto 
+        { 
+            Token = token, 
+            Username = user.Username,
+            PartyId = partyId,
+            PartyName = partyName
+        };
     }
 
     private string GenerateJwtToken(User user, Guid partyId)
@@ -95,6 +118,8 @@ public class AuthService : IAuthService
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim("username", user.Username),
             new Claim("partyId", partyId.ToString())
         };
 
