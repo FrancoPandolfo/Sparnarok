@@ -46,3 +46,11 @@ Todos los componentes frontend deben ser fluidos y adaptarse a cualquier tamaño
 - **Tableros y Grillas:** El `QuestBoard` debe soportar *scroll* horizontal (`overflow-x-auto flex-nowrap`) en móviles para preservar el ancho mínimo de las columnas sin comprimir las tarjetas. Los paneles de analíticas deben colapsar de múltiples columnas (`grid-cols-3`) a una sola (`grid-cols-1`) en resoluciones bajas.
 - **Navegación:** En móviles, colapsar menús extensos priorizando íconos o implementando menús hamburguesa. La información del Tenant (`Party`) y el usuario debe reducirse dinámicamente (`truncate`).
 - **Lienzos de Interacción:** Componentes como `ReactFlow` (Árbol de Habilidades) deben estar encapsulados en contenedores con dimensiones relativas (`w-full h-full`) y alturas mínimas estrictas (`min-h-[500px]`) para evitar colapsos a 0px, permitiendo el *pan* y *zoom* táctil en tablets y móviles.
+
+## 🏢 6. Multi-Tenancy Dinámico, Workspaces e Invitaciones
+Para operar como plataformas colaborativas modernas (Discord, Slack, Notion), Sparnarok desacopla la identidad del usuario de una única Party fija:
+
+- **Membresías Múltiples:** Un `User` puede formar parte de múltiples `Parties` mediante la entidad relacional `PartyMember`. El cambio de Workspace activo en el cliente (`WorkspaceSwitcher`) actualiza el contexto de `ITenantService` vía headers (`X-Party-Id`) o token JWT, reconectando dinámicamente los canales de SignalR.
+- **Flujo de Invitaciones Transaccionales:** Las invitaciones a una Party no mutan directamente la lista de miembros. Crean un registro en `PartyInvitation` con estado `Pending`. El destinatario recibe la notificación en su Header (`NotificationBell`) y al aceptar (`/api/me/invitations/{id}/accept`), se consolida su ingreso en `PartyMembers`.
+- **Feed Reactivo Optimista:** Para eliminar latencias perceptuales, las acciones locales (e.g. completar una Quest) inyectan inmediatamente el evento en el almacén global del Feed (`useFeedStore`), complementándose posteriormente con los eventos recibidos de SignalR del resto del equipo.
+- **Bypass de Desarrollo:** Los límites monetarios y paywalls de Party se omiten automáticamente cuando `IWebHostEnvironment.IsDevelopment()` es verdadero, facilitando la validación local sin fricciones de suscripción.

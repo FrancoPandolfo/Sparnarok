@@ -24,6 +24,7 @@ public class SparnarokDbContext : DbContext, ISparnarokDbContext
     public DbSet<PartyMember> PartyMembers { get; set; }
     public DbSet<PartyWebhookEvent> PartyWebhookEvents { get; set; }
     public DbSet<BoardColumn> BoardColumns { get; set; }
+    public DbSet<PartyInvitation> PartyInvitations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

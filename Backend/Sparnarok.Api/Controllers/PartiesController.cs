@@ -12,10 +12,18 @@ namespace Sparnarok.Api.Controllers;
 public class PartiesController : ControllerBase
 {
     private readonly ISparnarokDbContext _context;
+    private readonly IWebHostEnvironment? _env;
 
-    public PartiesController(ISparnarokDbContext context)
+    public PartiesController(ISparnarokDbContext context, IWebHostEnvironment? env = null)
     {
         _context = context;
+        _env = env;
+    }
+
+    private bool IsPartyPremium(Party? party)
+    {
+        if (_env != null && _env.IsDevelopment()) return true;
+        return party?.IsPremium ?? false;
     }
 
     [HttpGet("{partyId}")]
@@ -23,7 +31,7 @@ public class PartiesController : ControllerBase
     {
         var party = await _context.Parties.IgnoreQueryFilters().Include(p => p.Members).FirstOrDefaultAsync(p => p.Id == partyId);
         if (party == null) return NotFound();
-        return Ok(new { id = party.Id, name = party.Name, isPremium = party.IsPremium, memberCount = party.Members.Count });
+        return Ok(new { id = party.Id, name = party.Name, isPremium = IsPartyPremium(party), memberCount = party.Members.Count });
     }
 
     [HttpPost("{partyId}/invite")]
@@ -34,56 +42,90 @@ public class PartiesController : ControllerBase
         if (party == null) return NotFound(new { message = "Party no encontrada" });
 
         var targetUserId = dto.UserId;
+        string targetEmail = dto.Email?.Trim() ?? string.Empty;
+        User? user = null;
+
         if (targetUserId == Guid.Empty)
         {
-            var user = await _context.Users.IgnoreQueryFilters()
-                .FirstOrDefaultAsync(u => (!string.IsNullOrEmpty(dto.Email) && u.Email == dto.Email) ||
-                                          (!string.IsNullOrEmpty(dto.Username) && u.Username == dto.Username) ||
-                                          (!string.IsNullOrEmpty(dto.Email) && u.Username == dto.Email));
-            if (user == null)
+            user = await _context.Users.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(u => (!string.IsNullOrEmpty(dto.Email) && u.Email.ToLower() == dto.Email.ToLower()) ||
+                                          (!string.IsNullOrEmpty(dto.Username) && u.Username.ToLower() == dto.Username.ToLower()) ||
+                                          (!string.IsNullOrEmpty(dto.Email) && u.Username.ToLower() == dto.Email.ToLower()));
+            if (user != null)
             {
-                return NotFound(new { message = "Héroe no encontrado por email o username." });
+                targetUserId = user.Id;
+                if (string.IsNullOrEmpty(targetEmail))
+                {
+                    targetEmail = user.Email;
+                }
             }
-            targetUserId = user.Id;
         }
-
-        var existingMember = await _context.PartyMembers.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(pm => pm.PartyId == partyId && pm.UserId == targetUserId);
-
-        if (existingMember != null)
+        else
         {
-            return Ok(new { message = "El usuario ya forma parte de esta Party", partyId = party.Id, partyName = party.Name });
+            user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == targetUserId);
+            if (user != null && string.IsNullOrEmpty(targetEmail))
+            {
+                targetEmail = user.Email;
+            }
         }
 
-        if (!party.IsPremium && party.Members.Count >= 3)
+        if (string.IsNullOrEmpty(targetEmail))
+        {
+            return NotFound(new { message = "Héroe no encontrado por email o username." });
+        }
+
+        if (targetUserId != Guid.Empty)
+        {
+            var existingMember = await _context.PartyMembers.IgnoreQueryFilters()
+                .FirstOrDefaultAsync(pm => pm.PartyId == partyId && pm.UserId == targetUserId);
+
+            if (existingMember != null)
+            {
+                return Ok(new { message = "El usuario ya forma parte de esta Party", partyId = party.Id, partyName = party.Name });
+            }
+        }
+
+        if (!IsPartyPremium(party) && party.Members.Count >= 3)
         {
             return StatusCode(403, new { code = "ERR_PARTY_LIMIT_REACHED", message = "Límite de miembros alcanzado en plan gratuito." });
         }
 
-        var previousMembership = await _context.PartyMembers.IgnoreQueryFilters()
-            .FirstOrDefaultAsync(pm => pm.UserId == targetUserId);
+        // Check if there is already a pending invitation for this email in this party
+        var existingInvitation = await _context.PartyInvitations.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(pi => pi.PartyId == partyId && pi.InviteeEmail.ToLower() == targetEmail.ToLower() && pi.Status == "Pending");
 
-        if (previousMembership != null)
+        if (existingInvitation != null)
         {
-            previousMembership.PartyId = partyId;
-            previousMembership.Role = "Member";
+            return Ok(new { message = "Ya existe una invitación pendiente para este aliado", partyId = party.Id, partyName = party.Name, invitationId = existingInvitation.Id });
+        }
+
+        // Resolve InviterId
+        var inviterSub = User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+            ?? User?.FindFirst("sub")?.Value;
+        Guid inviterId = Guid.Empty;
+        if (Guid.TryParse(inviterSub, out var parsedInviter))
+        {
+            inviterId = parsedInviter;
         }
         else
         {
-            var newMember = new PartyMember
-            {
-                Id = Guid.NewGuid(),
-                PartyId = partyId,
-                UserId = targetUserId,
-                Role = "Member",
-                JoinedAt = DateTime.UtcNow
-            };
-            _context.PartyMembers.Add(newMember);
+            inviterId = party.Members.FirstOrDefault()?.UserId ?? Guid.Empty;
         }
 
+        var invitation = new PartyInvitation
+        {
+            Id = Guid.NewGuid(),
+            PartyId = partyId,
+            InviterId = inviterId,
+            InviteeEmail = targetEmail,
+            Status = "Pending",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.PartyInvitations.Add(invitation);
         await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Usuario invitado con éxito", partyId = party.Id, partyName = party.Name });
+        return Ok(new { message = "Invitación enviada con éxito", partyId = party.Id, partyName = party.Name, invitationId = invitation.Id });
     }
 
     [HttpPost("{partyId}/join")]
@@ -215,7 +257,7 @@ public class PartiesController : ControllerBase
             return StatusCode(403, new { code = "ERR_UNAUTHORIZED", message = "Sólo los mánagers pueden editar las reglas." });
         }
 
-        if (requester.Party != null && !requester.Party.IsPremium)
+        if (requester.Party != null && !IsPartyPremium(requester.Party))
         {
             return StatusCode(403, new { code = "ERR_REQUIRES_PRO", message = "Desbloquea las Reglas Custom con Sparnarok Pro." });
         }

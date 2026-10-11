@@ -50,7 +50,7 @@ export const InviteAllyModal = ({ onClose }: Props) => {
         })
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (response.status === 403 && data.code === 'ERR_PARTY_LIMIT_REACHED') {
         setShowPaywall(true);
@@ -61,7 +61,7 @@ export const InviteAllyModal = ({ onClose }: Props) => {
         throw new Error(data.message || 'Error al invitar al aliado.');
       }
 
-      setSuccessMsg(data.message || '¡Aliado invitado con éxito a tu Party!');
+      setSuccessMsg(data.message || 'Invitación enviada con éxito');
       setInviteInput('');
     } catch (err: any) {
       setErrorMsg(err.message || 'Fallo de conexión al enviar invitación.');
