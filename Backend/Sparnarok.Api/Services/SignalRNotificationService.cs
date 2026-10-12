@@ -26,7 +26,7 @@ public class SignalRNotificationService : IRealTimeNotificationService
         });
     }
 
-    public async Task NotifyNewActivityAsync(Guid partyId, string message, int xpGained)
+    public async Task NotifyNewActivityAsync(Guid partyId, string message, int xpGained, Guid? sourceUserId = null, string? username = null, Guid? questId = null)
     {
         var groupName = $"party-{partyId.ToString().ToLower()}";
         await _hubContext.Clients.Group(groupName).SendAsync("NewPartyActivity", new 
@@ -34,6 +34,9 @@ public class SignalRNotificationService : IRealTimeNotificationService
             id = Guid.NewGuid().ToString(),
             message = message,
             xp = xpGained,
+            sourceUserId = sourceUserId?.ToString(),
+            username = username,
+            questId = questId?.ToString(),
             timestamp = DateTime.UtcNow
         });
     }

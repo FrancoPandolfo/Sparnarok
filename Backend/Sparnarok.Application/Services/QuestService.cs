@@ -62,7 +62,7 @@ public class QuestService : IQuestService
         return quest;
     }
 
-    public async Task<Quest> UpdateQuestStatusAsync(Guid questId, QuestState newState, Guid userId)
+    public async Task<Quest> UpdateQuestStatusAsync(Guid questId, QuestState newState, Guid userId, string? requestUsername = null)
     {
         var quest = await _context.Quests
             .IgnoreQueryFilters()
@@ -144,11 +144,19 @@ public class QuestService : IQuestService
 
         if (newState == QuestState.Completed && !wasAlreadyCompleted)
         {
-            var heroName = user?.Username ?? "Un aliado";
+            var heroName = user?.Username 
+                ?? (!string.IsNullOrWhiteSpace(requestUsername) ? requestUsername : "Aliado");
             var baseRewardXp = quest.Rewards != null && quest.Rewards.Any() ? quest.Rewards.Sum(r => r.XpAmount) : 100;
             var totalXpGained = (int)Math.Round(baseRewardXp * totalMultiplier, MidpointRounding.AwayFromZero);
             if (totalXpGained <= 0) totalXpGained = 100;
-            await _notificationService.NotifyNewActivityAsync(quest.PartyId, $"{heroName} completó '{quest.Title}'", totalXpGained);
+            await _notificationService.NotifyNewActivityAsync(
+                quest.PartyId, 
+                $"El aliado {heroName} completó '{quest.Title}'", 
+                totalXpGained,
+                sourceUserId: user?.Id ?? (userId != Guid.Empty ? userId : null),
+                username: heroName,
+                questId: quest.Id
+            );
         }
 
         return quest;

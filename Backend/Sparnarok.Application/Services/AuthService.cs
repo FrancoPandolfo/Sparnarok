@@ -77,6 +77,7 @@ public class AuthService : IAuthService
         { 
             Token = token, 
             Username = user.Username,
+            UserId = user.Id,
             PartyId = partyId,
             PartyName = party.Name
         };
@@ -137,6 +138,7 @@ public class AuthService : IAuthService
         { 
             Token = token, 
             Username = user.Username,
+            UserId = user.Id,
             PartyId = partyId,
             PartyName = partyName
         };

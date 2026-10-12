@@ -12,7 +12,7 @@ interface QuestStoreState {
   
   fetchQuests: () => Promise<void>;
   createQuest: (payload: CreateQuestPayload) => Promise<void>;
-  updateQuestState: (id: string, newState: QuestState, userId: string) => Promise<void>;
+  updateQuestState: (id: string, newState: QuestState, userId?: string, username?: string) => Promise<void>;
   setQuestStateLocal: (id: string, newState: QuestState) => void;
   updateTagMultipliers: (multipliers: Record<string, number>) => Promise<void>;
   clearError: () => void;
@@ -86,7 +86,7 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
     }));
   },
 
-  updateQuestState: async (id: string, newState: QuestState, userId: string) => {
+  updateQuestState: async (id: string, newState: QuestState, userId?: string, username?: string) => {
     const previousQuests = get().quests;
     // const previousXp = get().userXp;
     const quest = previousQuests.find(q => q.id === id);
@@ -109,16 +109,23 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
     }));
     
     try {
-      const token = useAuthStore.getState().token;
-      const partyId = useAuthStore.getState().partyId;
+      const authState = useAuthStore.getState();
+      const token = authState.token;
+      const partyId = authState.partyId;
+      const resolvedUserId = userId || authState.userId || '';
+      const resolvedUsername = username || authState.username || '';
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       if (partyId) headers['X-Party-Id'] = partyId;
 
-      const response = await fetch(`/api/quests/${id}/status?userId=${userId}`, {
+      const response = await fetch(`/api/quests/${id}/status?userId=${resolvedUserId}`, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify({ state: newState })
+        body: JSON.stringify({ 
+          state: newState,
+          username: resolvedUsername,
+          userId: resolvedUserId && resolvedUserId !== '11111111-1111-1111-1111-111111111111' ? resolvedUserId : undefined
+        })
       });
       if (!response.ok) throw new Error('API Error');
     } catch {

@@ -83,7 +83,16 @@ public class QuestsController : ControllerBase
     {
         try
         {
-            var resolvedUserId = userId.HasValue && userId.Value != Guid.Empty ? userId.Value : Guid.Empty;
+            var resolvedUserId = Guid.Empty;
+            if (userId.HasValue && userId.Value != Guid.Empty && userId.Value != Guid.Parse("11111111-1111-1111-1111-111111111111"))
+            {
+                resolvedUserId = userId.Value;
+            }
+            else if (request.UserId.HasValue && request.UserId.Value != Guid.Empty && request.UserId.Value != Guid.Parse("11111111-1111-1111-1111-111111111111"))
+            {
+                resolvedUserId = request.UserId.Value;
+            }
+
             if (resolvedUserId == Guid.Empty)
             {
                 var subClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
@@ -94,7 +103,11 @@ public class QuestsController : ControllerBase
                 }
             }
 
-            var quest = await _questService.UpdateQuestStatusAsync(id, request.State, resolvedUserId);
+            var resolvedUsername = !string.IsNullOrWhiteSpace(request.Username)
+                ? request.Username
+                : (User?.FindFirst("username")?.Value ?? User?.FindFirst(ClaimTypes.Name)?.Value ?? User?.Identity?.Name);
+
+            var quest = await _questService.UpdateQuestStatusAsync(id, request.State, resolvedUserId, resolvedUsername);
             return Ok(new
             {
                 id = quest.Id.ToString(),

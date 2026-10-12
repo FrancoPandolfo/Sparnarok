@@ -122,7 +122,7 @@ export const QuestBoard = () => {
     if (sourceCol === destCol) return;
 
     const newState = parseInt(destCol) as QuestState;
-    updateQuestState(questId, newState, userId);
+    updateQuestState(questId, newState, userId, username || undefined);
 
     if (newState === QuestState.Completed) {
       const quest = quests.find(q => q.id === questId);
@@ -134,11 +134,12 @@ export const QuestBoard = () => {
 
       // Optimistic Reactive Feed: immediately reflect the user's action
       const questTitle = quest?.title || 'una Quest';
+      const actorName = username || 'Tú';
       useFeedStore.getState().addActivity({
-        id: `optimistic-${Date.now()}-${questId}`,
+        id: `optimistic-${questId}`,
         type: 'quest_completed',
-        user: username || 'Tú',
-        action: `¡Has completado '${questTitle}' y ganado +${xp} XP!`,
+        user: actorName,
+        action: `ha completado la tarea '${questTitle}' (+${xp} XP)`,
         time: 'Ahora'
       });
     }
