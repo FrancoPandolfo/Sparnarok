@@ -83,4 +83,59 @@ describe('useQuestStore Optimistic Updates', () => {
     expect(rollbackEntry).toBeDefined();
     expect(rollbackEntry?.action).toContain("La Quest 'Rejected Task' ha retornado (-100 XP)");
   });
+
+  it('optimistically adds feed entry with "¡[AssigneeName] ha completado \'[QuestTitle]\'!" when moving to Completed', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true });
+
+    useQuestStore.setState({
+      quests: [
+        {
+          id: 'quest-assigned-1',
+          title: 'Dragon Quest',
+          description: 'Slay the beast',
+          state: QuestState.InProgress,
+          assigneeId: 'hero-123',
+          assigneeName: 'Arthur',
+          rewards: [{ skillCategoryId: 'combat', xpAmount: 150 }],
+          difficulty: 0,
+          createdAt: ''
+        }
+      ]
+    });
+
+    await useQuestStore.getState().updateQuestState('quest-assigned-1', QuestState.Completed, 'qa-user', 'QA_Lead');
+
+    const feed = (await import('../parties/useFeedStore')).useFeedStore.getState().feed;
+    const completedEntry = feed.find(f => f.id === 'optimistic-quest-assigned-1');
+    expect(completedEntry).toBeDefined();
+    expect(completedEntry?.user).toBe('Arthur');
+    expect(completedEntry?.action).toBe("¡Arthur ha completado 'Dragon Quest'!");
+  });
+
+  it('assignQuest optimistically updates assignee on quest', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ id: 'quest-1', assigneeId: 'member-99', assigneeName: 'Lancelot' })
+    });
+
+    useQuestStore.setState({
+      quests: [
+        {
+          id: 'quest-1',
+          title: 'Patrol',
+          description: 'Guard castle',
+          state: QuestState.Pending,
+          rewards: [],
+          difficulty: 0,
+          createdAt: ''
+        }
+      ]
+    });
+
+    await useQuestStore.getState().assignQuest('quest-1', 'member-99', 'Lancelot');
+
+    const updated = useQuestStore.getState().quests.find(q => q.id === 'quest-1');
+    expect(updated?.assigneeId).toBe('member-99');
+    expect(updated?.assigneeName).toBe('Lancelot');
+  });
 });

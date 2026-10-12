@@ -47,13 +47,14 @@ export const PartyActivityFeed = ({ connection }: Props) => {
         }
 
         const questTitle = message.includes("'") ? message.split("'")[1] : 'la tarea';
+        const heroName = currentUsername || payloadUser || 'Tú';
         addActivity({
           id,
           type: isRollback ? 'quest_rollback' : 'quest_completed',
-          user: currentUsername || payloadUser || 'Tú',
+          user: heroName,
           action: isRollback
             ? `ha devuelto '${questTitle}' a desarrollo (${xp} XP)`
-            : `ha completado la tarea '${questTitle}' (+${xp} XP)`,
+            : `¡${heroName} ha completado '${questTitle}'!`,
           time: 'Ahora'
         });
         return;
@@ -127,9 +128,13 @@ export const PartyActivityFeed = ({ connection }: Props) => {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm">
-                    <span className={item.type === 'quest_rollback' ? 'font-medium text-amber-200/80' : 'font-bold text-white'}>
-                      {item.user}
-                    </span>{' '}
+                    {item.user && !item.action.startsWith('¡') && (
+                      <>
+                        <span className={item.type === 'quest_rollback' ? 'font-medium text-amber-200/80' : 'font-bold text-white'}>
+                          {item.user}
+                        </span>{' '}
+                      </>
+                    )}
                     <span className={item.type === 'quest_rollback' ? 'text-gray-400' : 'text-gray-300'}>
                       {item.action}
                     </span>

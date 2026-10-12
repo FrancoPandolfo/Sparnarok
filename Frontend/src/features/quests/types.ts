@@ -24,6 +24,8 @@ export interface Quest {
   description: string;
   difficulty: QuestDifficulty;
   state: QuestState;
+  assigneeId?: string | null;
+  assigneeName?: string | null;
   tags?: string[];
   rewards: QuestReward[];
   createdAt: string;
@@ -33,5 +35,13 @@ export interface CreateQuestPayload {
   title: string;
   description: string;
   difficulty: QuestDifficulty;
+  assigneeId?: string | null;
+  tags?: string[];
   rewards: QuestReward[];
+}
+
+export interface PartyMember {
+  id: string;
+  username: string;
+  role: string;
 }

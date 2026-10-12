@@ -34,6 +34,24 @@ public class PartiesController : ControllerBase
         return Ok(new { id = party.Id, name = party.Name, isPremium = IsPartyPremium(party), memberCount = party.Members.Count });
     }
 
+    [HttpGet("{partyId}/members")]
+    public async Task<IActionResult> GetPartyMembers(Guid partyId)
+    {
+        var members = await _context.PartyMembers
+            .IgnoreQueryFilters()
+            .Where(pm => pm.PartyId == partyId)
+            .Include(pm => pm.User)
+            .Select(pm => new
+            {
+                id = pm.UserId.ToString(),
+                username = pm.User != null ? pm.User.Username : "Aliado",
+                role = pm.Role
+            })
+            .ToListAsync();
+
+        return Ok(members);
+    }
+
     [HttpPost("{partyId}/invite")]
     public async Task<IActionResult> InviteToParty(Guid partyId, [FromBody] InviteDto dto)
     {

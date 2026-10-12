@@ -13,6 +13,7 @@ interface QuestStoreState {
   
   fetchQuests: () => Promise<void>;
   createQuest: (payload: CreateQuestPayload) => Promise<void>;
+  assignQuest: (id: string, assigneeId: string | null, assigneeName?: string | null) => Promise<void>;
   updateQuestState: (id: string, newState: QuestState, userId?: string, username?: string) => Promise<void>;
   setQuestStateLocal: (id: string, newState: QuestState) => void;
   updateTagMultipliers: (multipliers: Record<string, number>) => Promise<void>;
@@ -87,6 +88,45 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
     }));
   },
 
+  assignQuest: async (id: string, assigneeId: string | null, assigneeName?: string | null) => {
+    set(state => ({
+      quests: state.quests.map(q =>
+        (q.id.toLowerCase() === id.toLowerCase() || q.id === id)
+          ? { ...q, assigneeId, assigneeName: assigneeName ?? null }
+          : q
+      )
+    }));
+
+    try {
+      const authState = useAuthStore.getState();
+      const token = authState.token;
+      const partyId = authState.partyId;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (partyId) headers['X-Party-Id'] = partyId;
+
+      const response = await fetch(`/api/quests/${id}/assign`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ assigneeId })
+      });
+
+      if (!response.ok) throw new Error('Error al asignar la quest');
+      const updatedQuest = await response.json();
+      if (updatedQuest && updatedQuest.id) {
+        set(state => ({
+          quests: state.quests.map(q =>
+            (q.id.toLowerCase() === id.toLowerCase() || q.id === id)
+              ? { ...q, assigneeId: updatedQuest.assigneeId, assigneeName: updatedQuest.assigneeName }
+              : q
+          )
+        }));
+      }
+    } catch {
+      // Keep optimistic update for local test/offline
+    }
+  },
+
   updateQuestState: async (id: string, newState: QuestState, userId?: string, username?: string) => {
     const previousQuests = get().quests;
     // const previousXp = get().userXp;
@@ -117,12 +157,24 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
       userXp: Math.max(0, state.userXp + xpChange)
     }));
 
+    if (isMovingToCompleted && quest) {
+      const heroName = quest.assigneeName || username || useAuthStore.getState().username || 'Tú';
+      useFeedStore.getState().addActivity({
+        id: `optimistic-${id}`,
+        type: 'quest_completed',
+        user: heroName,
+        action: `¡${heroName} ha completado '${quest.title}'!`,
+        time: 'Ahora'
+      });
+    }
+
     if (isMovingFromCompleted && quest) {
       const rollbackXp = Math.abs(xpChange);
+      const heroName = quest.assigneeName || username || useAuthStore.getState().username || 'Tú';
       useFeedStore.getState().addActivity({
         id: `optimistic-rollback-${id}`,
         type: 'quest_rollback',
-        user: username || useAuthStore.getState().username || 'Tú',
+        user: heroName,
         action: `La Quest '${quest.title}' ha retornado (-${rollbackXp} XP)`,
         time: 'Ahora'
       });

@@ -43,6 +43,8 @@ public class QuestsController : ControllerBase
             description = q.Description,
             difficulty = (int)q.Difficulty,
             state = (int)q.State,
+            assigneeId = q.AssigneeId?.ToString(),
+            assigneeName = q.Assignee?.Username,
             tags = q.Tags,
             rewards = q.Rewards.Select(r => new
             {
@@ -64,7 +66,26 @@ public class QuestsController : ControllerBase
         try
         {
             var quest = await _questService.CreateQuestAsync(request);
-            return CreatedAtAction(nameof(GetQuestById), new { id = quest.Id }, quest);
+            var result = new
+            {
+                id = quest.Id.ToString(),
+                displayId = quest.DisplayId,
+                title = quest.Title,
+                description = quest.Description,
+                difficulty = (int)quest.Difficulty,
+                state = (int)quest.State,
+                assigneeId = quest.AssigneeId?.ToString(),
+                assigneeName = quest.Assignee?.Username,
+                tags = quest.Tags,
+                rewards = quest.Rewards.Select(r => new
+                {
+                    id = r.Id.ToString(),
+                    skillCategoryId = r.SkillCategoryId.ToString(),
+                    xpAmount = r.XpAmount
+                }).ToList(),
+                createdAt = quest.CreatedAt
+            };
+            return CreatedAtAction(nameof(GetQuestById), new { id = quest.Id }, result);
         }
         catch (Exception ex)
         {
@@ -76,6 +97,38 @@ public class QuestsController : ControllerBase
     public IActionResult GetQuestById(Guid id)
     {
         return Ok();
+    }
+
+    [HttpPatch("{id}/assign")]
+    public async Task<IActionResult> AssignQuest(Guid id, [FromBody] AssignQuestDto request)
+    {
+        try
+        {
+            var quest = await _questService.AssignQuestAsync(id, request.AssigneeId);
+            return Ok(new
+            {
+                id = quest.Id.ToString(),
+                displayId = quest.DisplayId,
+                title = quest.Title,
+                description = quest.Description,
+                difficulty = (int)quest.Difficulty,
+                state = (int)quest.State,
+                assigneeId = quest.AssigneeId?.ToString(),
+                assigneeName = quest.Assignee?.Username,
+                tags = quest.Tags,
+                rewards = quest.Rewards.Select(r => new
+                {
+                    id = r.Id.ToString(),
+                    skillCategoryId = r.SkillCategoryId.ToString(),
+                    xpAmount = r.XpAmount
+                }).ToList(),
+                createdAt = quest.CreatedAt
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPatch("{id}/status")]
@@ -116,6 +169,8 @@ public class QuestsController : ControllerBase
                 description = quest.Description,
                 difficulty = (int)quest.Difficulty,
                 state = (int)quest.State,
+                assigneeId = quest.AssigneeId?.ToString(),
+                assigneeName = quest.Assignee?.Username,
                 tags = quest.Tags,
                 rewards = quest.Rewards.Select(r => new
                 {

@@ -9,7 +9,6 @@ import { QuestState } from '../types';
 import { QuestCard } from './QuestCard';
 import { CreateQuestForm } from './CreateQuestForm';
 import { PartyActivityFeed } from '../../parties/components/PartyActivityFeed';
-import { useFeedStore } from '../../parties/useFeedStore';
 import { usePartyHub } from '../../../hooks/usePartyHub';
 import { useAuthStore } from '../../auth/useAuthStore';
 
@@ -131,17 +130,6 @@ export const QuestBoard = () => {
         setXpPopup({ visible: true, xp });
         setTimeout(() => setXpPopup({ visible: false, xp: 0 }), 2500);
       }
-
-      // Optimistic Reactive Feed: immediately reflect the user's action
-      const questTitle = quest?.title || 'una Quest';
-      const actorName = username || 'Tú';
-      useFeedStore.getState().addActivity({
-        id: `optimistic-${questId}`,
-        type: 'quest_completed',
-        user: actorName,
-        action: `ha completado la tarea '${questTitle}' (+${xp} XP)`,
-        time: 'Ahora'
-      });
     }
   };
 

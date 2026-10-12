@@ -38,6 +38,7 @@ public class QuestService : IQuestService
             Description = dto.Description,
             Difficulty = dto.Difficulty,
             State = QuestState.Pending,
+            AssigneeId = (dto.AssigneeId.HasValue && dto.AssigneeId.Value != Guid.Empty) ? dto.AssigneeId : null,
             CreatedAt = DateTime.UtcNow,
             Tags = dto.Tags ?? new System.Collections.Generic.List<string>(),
             Rewards = dto.Rewards.Select(r => new QuestReward
@@ -47,6 +48,11 @@ public class QuestService : IQuestService
                 XpAmount = r.XpAmount
             }).ToList()
         };
+
+        if (quest.AssigneeId.HasValue)
+        {
+            quest.Assignee = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == quest.AssigneeId.Value);
+        }
 
         _context.Quests.Add(quest);
         
@@ -62,11 +68,44 @@ public class QuestService : IQuestService
         return quest;
     }
 
+    public async Task<Quest> AssignQuestAsync(Guid questId, Guid? assigneeId)
+    {
+        var quest = await _context.Quests
+            .IgnoreQueryFilters()
+            .Include(q => q.Rewards)
+            .Include(q => q.Assignee)
+            .FirstOrDefaultAsync(q => q.Id == questId);
+
+        if (quest == null)
+            throw new ApplicationException("Quest no encontrada en los registros.");
+
+        if (assigneeId.HasValue && assigneeId.Value != Guid.Empty)
+        {
+            var userExists = await _context.Users.IgnoreQueryFilters().AnyAsync(u => u.Id == assigneeId.Value);
+            if (!userExists)
+                throw new ApplicationException("El héroe asignado no existe.");
+            quest.AssigneeId = assigneeId.Value;
+            quest.Assignee = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == assigneeId.Value);
+        }
+        else
+        {
+            quest.AssigneeId = null;
+            quest.Assignee = null;
+        }
+
+        await _context.SaveChangesAsync();
+
+        await _notificationService.NotifyQuestUpdatedAsync(quest.PartyId, quest.Id, quest.State.ToString(), quest.AssigneeId ?? Guid.Empty);
+
+        return quest;
+    }
+
     public async Task<Quest> UpdateQuestStatusAsync(Guid questId, QuestState newState, Guid userId, string? requestUsername = null)
     {
         var quest = await _context.Quests
             .IgnoreQueryFilters()
             .Include(q => q.Rewards)
+            .Include(q => q.Assignee)
             .FirstOrDefaultAsync(q => q.Id == questId);
 
         if (quest == null)
@@ -83,6 +122,11 @@ public class QuestService : IQuestService
                 quest.PartyId = fallbackTenantId;
             }
         }
+
+        // The user who receives or loses XP is quest.AssigneeId. Fallback to userId if not assigned.
+        var targetUserId = (quest.AssigneeId.HasValue && quest.AssigneeId.Value != Guid.Empty)
+            ? quest.AssigneeId.Value
+            : userId;
 
         Sparnarok.Core.Entities.User? user = null;
         decimal totalMultiplier = 1.0m;
@@ -103,7 +147,7 @@ public class QuestService : IQuestService
 
         if (newState == QuestState.Completed && oldState != QuestState.Completed)
         {
-            user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+            user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == targetUserId);
             if (user != null)
             {
                 var baseXP = quest.Rewards.Sum(r => r.XpAmount);
@@ -114,7 +158,7 @@ public class QuestService : IQuestService
                 {
                     var progression = await _context.UserSkillProgressions
                         .IgnoreQueryFilters()
-                        .FirstOrDefaultAsync(p => p.UserId == userId && p.SkillCategoryId == reward.SkillCategoryId);
+                        .FirstOrDefaultAsync(p => p.UserId == targetUserId && p.SkillCategoryId == reward.SkillCategoryId);
                     
                     if (progression == null)
                     {
@@ -122,7 +166,7 @@ public class QuestService : IQuestService
                         {
                             Id = Guid.NewGuid(),
                             PartyId = quest.PartyId,
-                            UserId = userId,
+                            UserId = targetUserId,
                             SkillCategoryId = reward.SkillCategoryId,
                             CurrentXp = 0,
                             Level = 1
@@ -138,7 +182,7 @@ public class QuestService : IQuestService
         }
         else if (oldState == QuestState.Completed && newState != QuestState.Completed)
         {
-            user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+            user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == targetUserId);
             if (user != null)
             {
                 var baseXP = quest.Rewards.Sum(r => r.XpAmount);
@@ -149,7 +193,7 @@ public class QuestService : IQuestService
                 {
                     var progression = await _context.UserSkillProgressions
                         .IgnoreQueryFilters()
-                        .FirstOrDefaultAsync(p => p.UserId == userId && p.SkillCategoryId == reward.SkillCategoryId);
+                        .FirstOrDefaultAsync(p => p.UserId == targetUserId && p.SkillCategoryId == reward.SkillCategoryId);
 
                     if (progression != null)
                     {
@@ -167,8 +211,9 @@ public class QuestService : IQuestService
 
         if (newState == QuestState.Completed && oldState != QuestState.Completed)
         {
-            var heroName = user?.Username 
-                ?? (!string.IsNullOrWhiteSpace(requestUsername) ? requestUsername : "Aliado");
+            var heroName = quest.Assignee?.Username 
+                ?? user?.Username 
+                ?? (!string.IsNullOrWhiteSpace(requestUsername) && targetUserId == userId ? requestUsername : "Aliado");
             var baseRewardXp = quest.Rewards != null && quest.Rewards.Any() ? quest.Rewards.Sum(r => r.XpAmount) : 100;
             var totalXpGained = (int)Math.Round(baseRewardXp * totalMultiplier, MidpointRounding.AwayFromZero);
             if (totalXpGained <= 0) totalXpGained = 100;
@@ -176,15 +221,16 @@ public class QuestService : IQuestService
                 quest.PartyId, 
                 $"El aliado {heroName} completó '{quest.Title}'", 
                 totalXpGained,
-                sourceUserId: user?.Id ?? (userId != Guid.Empty ? userId : null),
+                sourceUserId: user?.Id ?? (targetUserId != Guid.Empty ? targetUserId : null),
                 username: heroName,
                 questId: quest.Id
             );
         }
         else if (oldState == QuestState.Completed && newState != QuestState.Completed)
         {
-            var heroName = user?.Username 
-                ?? (!string.IsNullOrWhiteSpace(requestUsername) ? requestUsername : "Aliado");
+            var heroName = quest.Assignee?.Username 
+                ?? user?.Username 
+                ?? (!string.IsNullOrWhiteSpace(requestUsername) && targetUserId == userId ? requestUsername : "Aliado");
             var baseRewardXp = quest.Rewards != null && quest.Rewards.Any() ? quest.Rewards.Sum(r => r.XpAmount) : 100;
             var totalXpRollback = (int)Math.Round(baseRewardXp * totalMultiplier, MidpointRounding.AwayFromZero);
             if (totalXpRollback <= 0) totalXpRollback = 100;
@@ -192,7 +238,7 @@ public class QuestService : IQuestService
                 quest.PartyId, 
                 $"{heroName} ha devuelto '{quest.Title}' a desarrollo", 
                 -totalXpRollback,
-                sourceUserId: user?.Id ?? (userId != Guid.Empty ? userId : null),
+                sourceUserId: user?.Id ?? (targetUserId != Guid.Empty ? targetUserId : null),
                 username: heroName,
                 questId: quest.Id
             );
@@ -212,6 +258,7 @@ public class QuestService : IQuestService
         var quests = await _context.Quests
             .IgnoreQueryFilters()
             .Include(q => q.Rewards)
+            .Include(q => q.Assignee)
             .Where(q => q.PartyId == partyId)
             .OrderBy(q => q.CreatedAt)
             .ToListAsync();
