@@ -56,4 +56,31 @@ describe('useQuestStore Optimistic Updates', () => {
     const updated = useQuestStore.getState().quests.find(q => q.id === 'A1B2-C3D4');
     expect(updated?.state).toBe(QuestState.Completed);
   });
+
+  it('optimistically rolls back XP and adds feed entry when moving out of Completed', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({ ok: true });
+
+    useQuestStore.setState({
+      userXp: 150,
+      quests: [
+        {
+          id: 'quest-rollback-1',
+          title: 'Rejected Task',
+          description: 'Desc',
+          state: QuestState.Completed,
+          rewards: [{ skillCategoryId: 'cat-1', xpAmount: 100 }],
+          difficulty: 0,
+          createdAt: ''
+        }
+      ]
+    });
+
+    await useQuestStore.getState().updateQuestState('quest-rollback-1', QuestState.InProgress, 'user123', 'Tester');
+
+    expect(useQuestStore.getState().userXp).toBe(50); // 150 - 100
+    const feed = (await import('../parties/useFeedStore')).useFeedStore.getState().feed;
+    const rollbackEntry = feed.find(f => f.type === 'quest_rollback');
+    expect(rollbackEntry).toBeDefined();
+    expect(rollbackEntry?.action).toContain("La Quest 'Rejected Task' ha retornado (-100 XP)");
+  });
 });

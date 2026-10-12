@@ -193,4 +193,113 @@ public class QuestServiceTests
         var progression = await context.UserSkillProgressions.FirstOrDefaultAsync(p => p.UserId == userId);
         progression!.CurrentXp.Should().Be(150);
     }
+
+    [Fact]
+    public async Task UpdateQuestStatusAsync_FromCompletedToInProgress_ShouldRollbackUserXpAndSkillProgression()
+    {
+        // Arrange
+        var partyId = Guid.NewGuid();
+        using var context = GetDbContext(partyId);
+        var mockNotificationService = new Moq.Mock<IRealTimeNotificationService>();
+        var service = new QuestService(context, mockNotificationService.Object);
+        
+        var userId = Guid.NewGuid();
+        var skillId = Guid.NewGuid();
+
+        context.Users.Add(new Sparnarok.Core.Entities.User { Id = userId, Username = "Hero", TotalXp = 150 });
+        context.UserSkillProgressions.Add(new Sparnarok.Core.Entities.UserSkillProgression
+        {
+            Id = Guid.NewGuid(),
+            PartyId = partyId,
+            UserId = userId,
+            SkillCategoryId = skillId,
+            CurrentXp = 150,
+            Level = 2
+        });
+
+        var quest = new Sparnarok.Core.Entities.Quest
+        {
+            Id = Guid.NewGuid(),
+            PartyId = partyId,
+            Title = "Ticket Rejected",
+            State = QuestState.Completed,
+            Rewards = new List<Sparnarok.Core.Entities.QuestReward>
+            {
+                new Sparnarok.Core.Entities.QuestReward { SkillCategoryId = skillId, XpAmount = 100 }
+            }
+        };
+        context.Quests.Add(quest);
+        await context.SaveChangesAsync();
+
+        // Act - Moving from Completed to InProgress (rollback)
+        var result = await service.UpdateQuestStatusAsync(quest.Id, QuestState.InProgress, userId);
+
+        // Assert
+        result.State.Should().Be(QuestState.InProgress);
+        var updatedUser = await context.Users.FindAsync(userId);
+        updatedUser!.TotalXp.Should().Be(50); // 150 - 100
+
+        var progression = await context.UserSkillProgressions.FirstOrDefaultAsync(p => p.UserId == userId);
+        progression!.CurrentXp.Should().Be(50);
+        progression.Level.Should().Be(1); // 1 + (50/100) = 1
+
+        mockNotificationService.Verify(n => n.NotifyNewActivityAsync(
+            partyId,
+            Moq.It.Is<string>(msg => msg.Contains("ha devuelto 'Ticket Rejected' a desarrollo")),
+            -100,
+            userId,
+            "Hero",
+            quest.Id
+        ), Moq.Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateQuestStatusAsync_Rollback_ShouldNeverDropXpBelowZero()
+    {
+        // Arrange
+        var partyId = Guid.NewGuid();
+        using var context = GetDbContext(partyId);
+        var mockNotificationService = new Moq.Mock<IRealTimeNotificationService>();
+        var service = new QuestService(context, mockNotificationService.Object);
+        
+        var userId = Guid.NewGuid();
+        var skillId = Guid.NewGuid();
+
+        context.Users.Add(new Sparnarok.Core.Entities.User { Id = userId, Username = "Hero", TotalXp = 30 });
+        context.UserSkillProgressions.Add(new Sparnarok.Core.Entities.UserSkillProgression
+        {
+            Id = Guid.NewGuid(),
+            PartyId = partyId,
+            UserId = userId,
+            SkillCategoryId = skillId,
+            CurrentXp = 30,
+            Level = 1
+        });
+
+        var quest = new Sparnarok.Core.Entities.Quest
+        {
+            Id = Guid.NewGuid(),
+            PartyId = partyId,
+            Title = "Overkill Rollback",
+            State = QuestState.Completed,
+            Rewards = new List<Sparnarok.Core.Entities.QuestReward>
+            {
+                new Sparnarok.Core.Entities.QuestReward { SkillCategoryId = skillId, XpAmount = 100 }
+            }
+        };
+        context.Quests.Add(quest);
+        await context.SaveChangesAsync();
+
+        // Act
+        await service.UpdateQuestStatusAsync(quest.Id, QuestState.Pending, userId);
+
+        // Assert
+        var updatedUser = await context.Users.FindAsync(userId);
+        updatedUser!.TotalXp.Should().Be(0); // Clamped at 0
+
+        var progression = await context.UserSkillProgressions.FirstOrDefaultAsync(p => p.UserId == userId);
+        progression!.CurrentXp.Should().Be(0); // Clamped at 0
+        progression.Level.Should().Be(1); // Clamped at 1
+    }
 }
+

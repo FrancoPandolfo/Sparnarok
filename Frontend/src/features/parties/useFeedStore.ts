@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 export interface FeedItem {
   id: string;
-  type: 'quest_completed' | 'level_up';
+  type: 'quest_completed' | 'level_up' | 'quest_rollback';
   user: string;
   action: string;
   time: string;

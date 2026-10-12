@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { QuestState, QuestDifficulty } from './types';
 import type { Quest, CreateQuestPayload } from './types';
 import { useAuthStore } from '../auth/useAuthStore';
+import { useFeedStore } from '../parties/useFeedStore';
 
 interface QuestStoreState {
   quests: Quest[];
@@ -89,10 +90,13 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
   updateQuestState: async (id: string, newState: QuestState, userId?: string, username?: string) => {
     const previousQuests = get().quests;
     // const previousXp = get().userXp;
-    const quest = previousQuests.find(q => q.id === id);
+    const quest = previousQuests.find(q => q.id.toLowerCase() === id.toLowerCase() || q.id === id);
     
-    let xpGained = 0;
-    if (newState === QuestState.Completed && quest && quest.state !== QuestState.Completed) {
+    let xpChange = 0;
+    const isMovingToCompleted = newState === QuestState.Completed && quest && quest.state !== QuestState.Completed;
+    const isMovingFromCompleted = quest && quest.state === QuestState.Completed && newState !== QuestState.Completed;
+
+    if (quest && (isMovingToCompleted || isMovingFromCompleted)) {
       let baseXP = quest.rewards?.reduce((acc, r) => acc + r.xpAmount, 0) || 0;
       let multiplier = 1;
       quest.tags?.forEach(tag => {
@@ -100,13 +104,29 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
           multiplier *= get().tagMultipliers[tag];
         }
       });
-      xpGained = Math.round(baseXP * multiplier);
+      const calculatedXp = Math.round(baseXP * multiplier);
+      if (isMovingToCompleted) {
+        xpChange = calculatedXp;
+      } else if (isMovingFromCompleted) {
+        xpChange = -calculatedXp;
+      }
     }
 
     set(state => ({
-      quests: state.quests.map(q => q.id === id ? { ...q, state: newState } : q),
-      userXp: state.userXp + xpGained
+      quests: state.quests.map(q => (q.id.toLowerCase() === id.toLowerCase() || q.id === id) ? { ...q, state: newState } : q),
+      userXp: Math.max(0, state.userXp + xpChange)
     }));
+
+    if (isMovingFromCompleted && quest) {
+      const rollbackXp = Math.abs(xpChange);
+      useFeedStore.getState().addActivity({
+        id: `optimistic-rollback-${id}`,
+        type: 'quest_rollback',
+        user: username || useAuthStore.getState().username || 'Tú',
+        action: `La Quest '${quest.title}' ha retornado (-${rollbackXp} XP)`,
+        time: 'Ahora'
+      });
+    }
     
     try {
       const authState = useAuthStore.getState();

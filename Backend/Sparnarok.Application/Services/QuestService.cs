@@ -72,7 +72,7 @@ public class QuestService : IQuestService
         if (quest == null)
             throw new ApplicationException("Quest no encontrada en los registros.");
 
-        var wasAlreadyCompleted = quest.State == QuestState.Completed;
+        var oldState = quest.State;
         quest.State = newState;
 
         if (quest.PartyId == Guid.Empty)
@@ -87,24 +87,23 @@ public class QuestService : IQuestService
         Sparnarok.Core.Entities.User? user = null;
         decimal totalMultiplier = 1.0m;
 
-        if (newState == QuestState.Completed && !wasAlreadyCompleted)
+        // Calculate XP Multiplier based on Party tags
+        var party = await _context.Parties.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == quest.PartyId);
+        var multipliers = party?.TagMultipliers ?? new System.Collections.Generic.Dictionary<string, decimal>();
+        if (quest.Tags != null)
         {
-            user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
-            
-            // Calculate XP Multiplier based on Party tags
-            var party = await _context.Parties.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == quest.PartyId);
-            var multipliers = party?.TagMultipliers ?? new System.Collections.Generic.Dictionary<string, decimal>();
-            if (quest.Tags != null)
+            foreach(var tag in quest.Tags)
             {
-                foreach(var tag in quest.Tags)
+                if (multipliers.TryGetValue(tag, out var mult))
                 {
-                    if (multipliers.TryGetValue(tag, out var mult))
-                    {
-                        totalMultiplier *= mult;
-                    }
+                    totalMultiplier *= mult;
                 }
             }
+        }
 
+        if (newState == QuestState.Completed && oldState != QuestState.Completed)
+        {
+            user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
             if (user != null)
             {
                 var baseXP = quest.Rewards.Sum(r => r.XpAmount);
@@ -137,12 +136,36 @@ public class QuestService : IQuestService
                 }
             }
         }
+        else if (oldState == QuestState.Completed && newState != QuestState.Completed)
+        {
+            user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
+            if (user != null)
+            {
+                var baseXP = quest.Rewards.Sum(r => r.XpAmount);
+                var xpRollback = (int)Math.Round(baseXP * totalMultiplier, MidpointRounding.AwayFromZero);
+                user.TotalXp = Math.Max(0, user.TotalXp - xpRollback);
+
+                foreach (var reward in quest.Rewards)
+                {
+                    var progression = await _context.UserSkillProgressions
+                        .IgnoreQueryFilters()
+                        .FirstOrDefaultAsync(p => p.UserId == userId && p.SkillCategoryId == reward.SkillCategoryId);
+
+                    if (progression != null)
+                    {
+                        var rewardXp = (int)Math.Round(reward.XpAmount * totalMultiplier, MidpointRounding.AwayFromZero);
+                        progression.CurrentXp = Math.Max(0, progression.CurrentXp - rewardXp);
+                        progression.Level = Math.Max(1, 1 + (progression.CurrentXp / 100));
+                    }
+                }
+            }
+        }
 
         await _context.SaveChangesAsync();
 
         await _notificationService.NotifyQuestUpdatedAsync(quest.PartyId, quest.Id, newState.ToString(), userId);
 
-        if (newState == QuestState.Completed && !wasAlreadyCompleted)
+        if (newState == QuestState.Completed && oldState != QuestState.Completed)
         {
             var heroName = user?.Username 
                 ?? (!string.IsNullOrWhiteSpace(requestUsername) ? requestUsername : "Aliado");
@@ -153,6 +176,22 @@ public class QuestService : IQuestService
                 quest.PartyId, 
                 $"El aliado {heroName} completó '{quest.Title}'", 
                 totalXpGained,
+                sourceUserId: user?.Id ?? (userId != Guid.Empty ? userId : null),
+                username: heroName,
+                questId: quest.Id
+            );
+        }
+        else if (oldState == QuestState.Completed && newState != QuestState.Completed)
+        {
+            var heroName = user?.Username 
+                ?? (!string.IsNullOrWhiteSpace(requestUsername) ? requestUsername : "Aliado");
+            var baseRewardXp = quest.Rewards != null && quest.Rewards.Any() ? quest.Rewards.Sum(r => r.XpAmount) : 100;
+            var totalXpRollback = (int)Math.Round(baseRewardXp * totalMultiplier, MidpointRounding.AwayFromZero);
+            if (totalXpRollback <= 0) totalXpRollback = 100;
+            await _notificationService.NotifyNewActivityAsync(
+                quest.PartyId, 
+                $"{heroName} ha devuelto '{quest.Title}' a desarrollo", 
+                -totalXpRollback,
                 sourceUserId: user?.Id ?? (userId != Guid.Empty ? userId : null),
                 username: heroName,
                 questId: quest.Id

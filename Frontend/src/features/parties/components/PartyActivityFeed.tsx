@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, ArrowUpCircle } from 'lucide-react';
+import { Zap, ArrowUpCircle, RotateCcw } from 'lucide-react';
 import { useFeedStore, type FeedItem } from '../useFeedStore';
 import { useAuthStore } from '../../auth/useAuthStore';
 
@@ -24,6 +24,7 @@ export const PartyActivityFeed = ({ connection }: Props) => {
       const payloadUser = payload?.username || payload?.Username;
       const payloadSourceUserId = payload?.sourceUserId || payload?.SourceUserId;
       const payloadQuestId = payload?.questId || payload?.QuestId;
+      const isRollback = xp < 0;
 
       const authState = useAuthStore.getState();
       const currentUserId = authState.userId;
@@ -34,7 +35,7 @@ export const PartyActivityFeed = ({ connection }: Props) => {
         (payloadUser && currentUsername && payloadUser.toLowerCase() === currentUsername.toLowerCase())
       );
 
-      // If completed by current user, prevent duplicate activity item in their own panel
+      // If completed or rolled back by current user, prevent duplicate activity item in their own panel
       if (isCurrentUser) {
         const existingFeed = useFeedStore.getState().feed;
         const alreadyExists = existingFeed.some(item => 
@@ -48,9 +49,11 @@ export const PartyActivityFeed = ({ connection }: Props) => {
         const questTitle = message.includes("'") ? message.split("'")[1] : 'la tarea';
         addActivity({
           id,
-          type: 'quest_completed',
+          type: isRollback ? 'quest_rollback' : 'quest_completed',
           user: currentUsername || payloadUser || 'Tú',
-          action: `ha completado la tarea '${questTitle}' (+${xp} XP)`,
+          action: isRollback
+            ? `ha devuelto '${questTitle}' a desarrollo (${xp} XP)`
+            : `ha completado la tarea '${questTitle}' (+${xp} XP)`,
           time: 'Ahora'
         });
         return;
@@ -58,7 +61,7 @@ export const PartyActivityFeed = ({ connection }: Props) => {
 
       // For ally (e.g. other party members):
       const heroName = payloadUser || (message && !message.startsWith('El aliado') && !message.startsWith('Un aliado') ? message.split(' ')[0] : 'un aliado');
-      const allyUser = `El aliado ${heroName}`;
+      const allyUser = isRollback ? heroName : `El aliado ${heroName}`;
 
       let actionText = message;
       if (actionText.startsWith(`El aliado ${heroName} `)) {
@@ -69,13 +72,17 @@ export const PartyActivityFeed = ({ connection }: Props) => {
         actionText = actionText.substring('Un aliado '.length);
       }
 
-      if (xp > 0 && !actionText.includes(`+${xp} XP`)) {
+      if (isRollback) {
+        if (!actionText.includes(`${xp} XP`)) {
+          actionText = `${actionText} (${xp} XP)`;
+        }
+      } else if (xp > 0 && !actionText.includes(`+${xp} XP`)) {
         actionText = `${actionText} (+${xp} XP)`;
       }
 
       const newItem: FeedItem = {
         id,
-        type: 'quest_completed',
+        type: isRollback ? 'quest_rollback' : 'quest_completed',
         user: allyUser,
         action: actionText,
         time: 'Ahora'
@@ -103,18 +110,29 @@ export const PartyActivityFeed = ({ connection }: Props) => {
                 key={item.id}
                 initial={{ opacity: 0, x: -20, height: 0 }}
                 animate={{ opacity: 1, x: 0, height: 'auto' }}
-                className="flex items-start gap-3 bg-gray-900 p-3 rounded-lg border border-gray-800"
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+                  item.type === 'quest_rollback' 
+                    ? 'bg-gray-900/40 border-gray-800/80' 
+                    : 'bg-gray-900 border-gray-800'
+                }`}
               >
                 <div className="mt-1">
                   {item.type === 'quest_completed' ? (
                     <Zap size={16} className="text-emerald-400" />
+                  ) : item.type === 'quest_rollback' ? (
+                    <RotateCcw size={16} className="text-amber-500/80" />
                   ) : (
                     <ArrowUpCircle size={16} className="text-blue-400" />
                   )}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-300">
-                    <span className="font-bold text-white">{item.user}</span> {item.action}
+                  <p className="text-sm">
+                    <span className={item.type === 'quest_rollback' ? 'font-medium text-amber-200/80' : 'font-bold text-white'}>
+                      {item.user}
+                    </span>{' '}
+                    <span className={item.type === 'quest_rollback' ? 'text-gray-400' : 'text-gray-300'}>
+                      {item.action}
+                    </span>
                   </p>
                   <p className="text-xs text-gray-500 mt-1">{item.time}</p>
                 </div>

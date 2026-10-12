@@ -89,4 +89,34 @@ describe('PartyActivityFeed', () => {
     expect(feed[0].user).toBe('Sparky');
     expect(feed[0].action).toBe("ha completado la tarea 'Bug Fix' (+50 XP)");
   });
+
+  it('renders rollback events with subtle styling and negative XP format', async () => {
+    const listeners: Record<string, Function> = {};
+    const mockConnection = {
+      on: vi.fn((event, callback) => {
+        listeners[event] = callback;
+      }),
+      off: vi.fn()
+    };
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <PartyActivityFeed connection={mockConnection} />
+      </I18nextProvider>
+    );
+
+    await act(async () => {
+      listeners['NewPartyActivity']?.({
+        id: 'rollback-event-1',
+        username: 'Fran',
+        sourceUserId: 'fran-id',
+        message: "Fran ha devuelto 'Auth Flow' a desarrollo",
+        xp: -80,
+        questId: 'quest-auth'
+      });
+    });
+
+    expect(await screen.findByText('Fran')).toBeDefined();
+    expect(await screen.findByText(/ha devuelto 'Auth Flow' a desarrollo \(-80 XP\)/)).toBeDefined();
+  });
 });
