@@ -10,6 +10,7 @@ interface QuestStoreState {
   error: string | null;
   tagMultipliers: Record<string, number>;
   
+  fetchQuests: () => Promise<void>;
   createQuest: (payload: CreateQuestPayload) => Promise<void>;
   updateQuestState: (id: string, newState: QuestState, userId: string) => Promise<void>;
   setQuestStateLocal: (id: string, newState: QuestState) => void;
@@ -48,14 +49,40 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
 
   clearError: () => set({ error: null }),
 
+  fetchQuests: async () => {
+    const token = useAuthStore.getState().token;
+    const partyId = useAuthStore.getState().partyId;
+    if (!partyId || partyId === 'party1') return;
+
+    set({ isLoading: true, error: null });
+    try {
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (partyId) headers['X-Party-Id'] = partyId;
+
+      const response = await fetch(`/api/quests?partyId=${partyId}`, { headers });
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          set({ quests: data, isLoading: false });
+          return;
+        }
+      }
+      set({ isLoading: false });
+    } catch {
+      set({ isLoading: false });
+    }
+  },
+
   updateTagMultipliers: async (multipliers: Record<string, number>) => {
     set({ tagMultipliers: multipliers });
-    // Aquí iría el fetch PUT /api/party/{partyId}/settings/multipliers
   },
 
   setQuestStateLocal: (id: string, newState: QuestState) => {
     set(state => ({
-      quests: state.quests.map(q => q.id === id ? { ...q, state: newState } : q)
+      quests: state.quests.map(q => 
+        (q.id.toLowerCase() === id.toLowerCase()) ? { ...q, state: newState } : q
+      )
     }));
   },
 

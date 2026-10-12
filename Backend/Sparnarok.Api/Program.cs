@@ -69,14 +69,25 @@ app.UseAuthorization();
 app.Use(async (context, next) =>
 {
     var tenantService = context.RequestServices.GetRequiredService<ITenantService>();
-    var partyIdClaim = context.User?.FindFirst("partyId")?.Value;
-    if (Guid.TryParse(partyIdClaim, out var partyId) && partyId != Guid.Empty)
+    if (context.Request.Headers.TryGetValue("X-Party-Id", out var headerPartyId) && 
+        Guid.TryParse(headerPartyId, out var parsedHeaderPartyId) && 
+        parsedHeaderPartyId != Guid.Empty)
     {
-        tenantService.SetCurrentPartyId(partyId);
+        tenantService.SetCurrentPartyId(parsedHeaderPartyId);
     }
-    else if (context.Request.Headers.TryGetValue("X-Party-Id", out var headerPartyId) && Guid.TryParse(headerPartyId, out var parsedPartyId))
+    else if (context.Request.Query.TryGetValue("partyId", out var queryPartyId) &&
+             Guid.TryParse(queryPartyId, out var parsedQueryPartyId) &&
+             parsedQueryPartyId != Guid.Empty)
     {
-        tenantService.SetCurrentPartyId(parsedPartyId);
+        tenantService.SetCurrentPartyId(parsedQueryPartyId);
+    }
+    else
+    {
+        var partyIdClaim = context.User?.FindFirst("partyId")?.Value;
+        if (Guid.TryParse(partyIdClaim, out var partyId) && partyId != Guid.Empty)
+        {
+            tenantService.SetCurrentPartyId(partyId);
+        }
     }
     await next();
 });

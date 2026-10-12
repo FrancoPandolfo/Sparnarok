@@ -22,11 +22,19 @@ export const PartyActivityFeed = ({ connection }: Props) => {
       const id = payload?.id || payload?.Id || Date.now().toString();
       const user = payload?.user || payload?.User || (message ? message.split(' ')[0] : 'Aliado');
 
+      let actionText = message;
+      if (actionText.startsWith(`${user} `)) {
+        actionText = actionText.substring(user.length + 1);
+      }
+      if (xp > 0 && !actionText.includes(`+${xp} XP`)) {
+        actionText = `${actionText} (+${xp} XP)`;
+      }
+
       const newItem: FeedItem = {
         id,
         type: 'quest_completed',
         user,
-        action: xp > 0 ? `${message} (+${xp} XP)` : message,
+        action: actionText,
         time: 'Ahora'
       };
 

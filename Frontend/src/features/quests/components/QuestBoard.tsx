@@ -28,7 +28,7 @@ const DEFAULT_COLUMNS: ColumnItem[] = [
 
 export const QuestBoard = () => {
   const { t } = useTranslation();
-  const { quests, updateQuestState, setQuestStateLocal } = useQuestStore();
+  const { quests, updateQuestState, setQuestStateLocal, fetchQuests } = useQuestStore();
   const token = useAuthStore(state => state.token);
   const partyId = useAuthStore(state => state.partyId) || 'party1';
   const userId = useAuthStore(state => state.userId) || '11111111-1111-1111-1111-111111111111';
@@ -90,10 +90,14 @@ export const QuestBoard = () => {
   }, [partyId, token]);
 
   useEffect(() => {
+    fetchQuests();
+  }, [partyId, token, fetchQuests]);
+
+  useEffect(() => {
     if (!connection) return;
     const onQuestUpdated = (payload: any) => {
       const sourceUserId = payload?.sourceUserId || payload?.SourceUserId;
-      if (sourceUserId && sourceUserId === userId) return;
+      if (sourceUserId && sourceUserId.toLowerCase() === userId.toLowerCase()) return;
 
       const rawState = payload?.newState ?? payload?.NewState;
       const questId = payload?.questId || payload?.QuestId;
