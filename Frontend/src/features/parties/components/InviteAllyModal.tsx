@@ -31,7 +31,11 @@ export const InviteAllyModal = ({ onClose }: Props) => {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!partyId || !inviteInput.trim()) return;
+    if (!inviteInput.trim()) return;
+    if (!partyId) {
+      setErrorMsg('Error crítico: No tienes una Party activa (ID no asignada). Cierra sesión y vuelve a ingresar.');
+      return;
+    }
 
     setIsLoading(true);
     setErrorMsg('');

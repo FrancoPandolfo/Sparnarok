@@ -137,9 +137,12 @@ export const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Interactive Skill Tree Canvas: Strict explicit dimensions w-full h-full min-h-[600px] flex-1 */}
-      <div className="w-full h-full min-h-[600px] flex-1 relative">
-        <SkillTree unlockedNodeIds={unlockedNodeNames} />
+      {/* Contenedor padre con flex-grow y relative */}
+      <div className="flex-1 w-full relative min-h-[600px]">
+        {/* Contenedor hijo absoluto que fuerza el tamaño para React Flow */}
+        <div className="absolute inset-0">
+          <SkillTree unlockedNodeIds={unlockedNodeNames} />
+        </div>
       </div>
 
       {/* Level Up Celebration Modal */}
