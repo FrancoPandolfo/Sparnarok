@@ -72,9 +72,7 @@ public class QuestService : IQuestService
         if (quest == null)
             throw new ApplicationException("Quest no encontrada en los registros.");
 
-        if (quest.State == QuestState.Completed)
-            throw new ApplicationException("La Quest ya ha sido forjada y completada.");
-
+        var wasAlreadyCompleted = quest.State == QuestState.Completed;
         quest.State = newState;
 
         if (quest.PartyId == Guid.Empty)
@@ -89,7 +87,7 @@ public class QuestService : IQuestService
         Sparnarok.Core.Entities.User? user = null;
         decimal totalMultiplier = 1.0m;
 
-        if (newState == QuestState.Completed)
+        if (newState == QuestState.Completed && !wasAlreadyCompleted)
         {
             user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == userId);
             
@@ -144,7 +142,7 @@ public class QuestService : IQuestService
 
         await _notificationService.NotifyQuestUpdatedAsync(quest.PartyId, quest.Id, newState.ToString(), userId);
 
-        if (newState == QuestState.Completed)
+        if (newState == QuestState.Completed && !wasAlreadyCompleted)
         {
             var heroName = user?.Username ?? "Un aliado";
             var baseRewardXp = quest.Rewards != null && quest.Rewards.Any() ? quest.Rewards.Sum(r => r.XpAmount) : 100;
@@ -158,6 +156,12 @@ public class QuestService : IQuestService
 
     public async Task<System.Collections.Generic.IEnumerable<Quest>> GetQuestsByPartyAsync(Guid partyId)
     {
+        var partyExists = await _context.Parties.IgnoreQueryFilters().AnyAsync(p => p.Id == partyId);
+        if (!partyExists)
+        {
+            return new List<Quest>();
+        }
+
         var quests = await _context.Quests
             .IgnoreQueryFilters()
             .Include(q => q.Rewards)
@@ -168,7 +172,26 @@ public class QuestService : IQuestService
         if (quests.Count == 0)
         {
             var firstCategory = await _context.SkillCategories.FirstOrDefaultAsync();
-            var skillCatId = firstCategory?.Id ?? Guid.NewGuid();
+            if (firstCategory == null)
+            {
+                firstCategory = new SkillCategory
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Frontend",
+                    Description = "Desarrollo Frontend y UI",
+                    IsPremiumTier = false
+                };
+                var backendCat = new SkillCategory
+                {
+                    Id = Guid.NewGuid(),
+                    Name = "Backend",
+                    Description = "Desarrollo Backend y APIs",
+                    IsPremiumTier = false
+                };
+                _context.SkillCategories.AddRange(firstCategory, backendCat);
+                await _context.SaveChangesAsync();
+            }
+            var skillCatId = firstCategory.Id;
 
             var q1 = new Quest
             {

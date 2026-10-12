@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useQuestStore } from './useQuestStore';
+import { useAuthStore } from '../auth/useAuthStore';
 import { QuestState } from './types';
 
 describe('useQuestStore Optimistic Updates', () => {
@@ -25,5 +26,34 @@ describe('useQuestStore Optimistic Updates', () => {
     expect(immediateState.userXp).toBe(100);
 
     await updatePromise;
+  });
+
+  it('fetchQuests loads persisted quests from API', async () => {
+    useAuthStore.setState({ partyId: 'valid-party-uuid', token: 'valid-token' });
+
+    const mockDbQuests = [
+      { id: 'guid-123', title: 'Persisted Quest', state: QuestState.Completed, rewards: [], difficulty: 0, createdAt: '' }
+    ];
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => mockDbQuests
+    });
+
+    await useQuestStore.getState().fetchQuests();
+
+    expect(useQuestStore.getState().quests).toEqual(mockDbQuests);
+  });
+
+  it('setQuestStateLocal updates quest state case-insensitively for SignalR events', () => {
+    useQuestStore.setState({
+      quests: [
+        { id: 'A1B2-C3D4', title: 'Test Quest', state: QuestState.Pending, rewards: [], difficulty: 0, createdAt: '' }
+      ]
+    });
+
+    useQuestStore.getState().setQuestStateLocal('a1b2-c3d4', QuestState.Completed);
+
+    const updated = useQuestStore.getState().quests.find(q => q.id === 'A1B2-C3D4');
+    expect(updated?.state).toBe(QuestState.Completed);
   });
 });

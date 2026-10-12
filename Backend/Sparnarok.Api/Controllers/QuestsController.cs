@@ -35,7 +35,24 @@ public class QuestsController : ControllerBase
         }
 
         var quests = await _questService.GetQuestsByPartyAsync(targetPartyId);
-        return Ok(quests);
+        var result = quests.Select(q => new
+        {
+            id = q.Id.ToString(),
+            displayId = q.DisplayId,
+            title = q.Title,
+            description = q.Description,
+            difficulty = (int)q.Difficulty,
+            state = (int)q.State,
+            tags = q.Tags,
+            rewards = q.Rewards.Select(r => new
+            {
+                id = r.Id.ToString(),
+                skillCategoryId = r.SkillCategoryId.ToString(),
+                xpAmount = r.XpAmount
+            }).ToList(),
+            createdAt = q.CreatedAt
+        });
+        return Ok(result);
     }
 
     [HttpPost]
@@ -78,7 +95,23 @@ public class QuestsController : ControllerBase
             }
 
             var quest = await _questService.UpdateQuestStatusAsync(id, request.State, resolvedUserId);
-            return Ok(quest);
+            return Ok(new
+            {
+                id = quest.Id.ToString(),
+                displayId = quest.DisplayId,
+                title = quest.Title,
+                description = quest.Description,
+                difficulty = (int)quest.Difficulty,
+                state = (int)quest.State,
+                tags = quest.Tags,
+                rewards = quest.Rewards.Select(r => new
+                {
+                    id = r.Id.ToString(),
+                    skillCategoryId = r.SkillCategoryId.ToString(),
+                    xpAmount = r.XpAmount
+                }).ToList(),
+                createdAt = quest.CreatedAt
+            });
         }
         catch (Exception ex)
         {
