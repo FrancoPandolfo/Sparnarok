@@ -32,7 +32,7 @@ describe('useQuestStore Optimistic Updates', () => {
     useAuthStore.setState({ partyId: 'valid-party-uuid', token: 'valid-token' });
 
     const mockDbQuests = [
-      { id: 'guid-123', title: 'Persisted Quest', state: QuestState.Completed, rewards: [], difficulty: 0, createdAt: '' }
+      { id: 'guid-123', title: 'Persisted Quest', description: 'Persisted Description', state: QuestState.Completed, rewards: [], difficulty: 0, createdAt: '' }
     ];
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
@@ -47,7 +47,7 @@ describe('useQuestStore Optimistic Updates', () => {
   it('setQuestStateLocal updates quest state case-insensitively for SignalR events', () => {
     useQuestStore.setState({
       quests: [
-        { id: 'A1B2-C3D4', title: 'Test Quest', state: QuestState.Pending, rewards: [], difficulty: 0, createdAt: '' }
+        { id: 'A1B2-C3D4', title: 'Test Quest', description: 'Test Description', state: QuestState.Pending, rewards: [], difficulty: 0, createdAt: '' }
       ]
     });
 
