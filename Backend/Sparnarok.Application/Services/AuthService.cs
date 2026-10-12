@@ -91,11 +91,46 @@ public class AuthService : IAuthService
         }
 
         var member = await _context.PartyMembers.IgnoreQueryFilters().FirstOrDefaultAsync(m => m.UserId == user.Id);
-        var partyId = member?.PartyId ?? Guid.Empty;
-        var party = partyId != Guid.Empty
-            ? await _context.Parties.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == partyId)
-            : null;
-        var partyName = party?.Name ?? "Mi Party";
+        Guid partyId;
+        string partyName;
+
+        if (member == null)
+        {
+            // Self-Healing Onboarding: Si el usuario existe de migraciones previas sin Party, le forjamos su Workspace automáticamente
+            partyId = Guid.NewGuid();
+            var party = new Party
+            {
+                Id = partyId,
+                Name = $"Party de {user.Username}",
+                IsPremium = false
+            };
+            _context.Parties.Add(party);
+
+            member = new PartyMember
+            {
+                Id = Guid.NewGuid(),
+                PartyId = partyId,
+                UserId = user.Id,
+                Role = "Manager"
+            };
+            _context.PartyMembers.Add(member);
+
+            _context.BoardColumns.AddRange(new[]
+            {
+                new BoardColumn { Id = Guid.NewGuid(), PartyId = partyId, Name = "Pendiente", Order = 0, CreatedAt = DateTime.UtcNow },
+                new BoardColumn { Id = Guid.NewGuid(), PartyId = partyId, Name = "En Progreso", Order = 1, CreatedAt = DateTime.UtcNow },
+                new BoardColumn { Id = Guid.NewGuid(), PartyId = partyId, Name = "Completada", Order = 2, CreatedAt = DateTime.UtcNow }
+            });
+
+            await _context.SaveChangesAsync();
+            partyName = party.Name;
+        }
+        else
+        {
+            partyId = member.PartyId;
+            var party = await _context.Parties.IgnoreQueryFilters().FirstOrDefaultAsync(p => p.Id == partyId);
+            partyName = party?.Name ?? $"Party de {user.Username}";
+        }
 
         var token = GenerateJwtToken(user, partyId);
         return new AuthResultDto 

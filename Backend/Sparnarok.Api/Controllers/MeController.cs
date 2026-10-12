@@ -62,6 +62,44 @@ public class MeController : ControllerBase
             .Where(pm => pm.UserId == currentUserId)
             .ToListAsync();
 
+        if (memberships.Count == 0)
+        {
+            var user = await _context.Users.IgnoreQueryFilters().FirstOrDefaultAsync(u => u.Id == currentUserId);
+            if (user != null)
+            {
+                var party = new Party
+                {
+                    Id = Guid.NewGuid(),
+                    Name = $"Party de {user.Username}",
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Parties.Add(party);
+
+                var newMember = new PartyMember
+                {
+                    Id = Guid.NewGuid(),
+                    PartyId = party.Id,
+                    UserId = user.Id,
+                    Role = "Manager",
+                    JoinedAt = DateTime.UtcNow
+                };
+                _context.PartyMembers.Add(newMember);
+
+                var defaultColumns = new[]
+                {
+                    new BoardColumn { Id = Guid.NewGuid(), PartyId = party.Id, Name = "Pendiente", Order = 0, CreatedAt = DateTime.UtcNow },
+                    new BoardColumn { Id = Guid.NewGuid(), PartyId = party.Id, Name = "En Progreso", Order = 1, CreatedAt = DateTime.UtcNow },
+                    new BoardColumn { Id = Guid.NewGuid(), PartyId = party.Id, Name = "Completada", Order = 2, CreatedAt = DateTime.UtcNow }
+                };
+                _context.BoardColumns.AddRange(defaultColumns);
+
+                await _context.SaveChangesAsync();
+
+                memberships = new List<PartyMember> { newMember };
+                newMember.Party = party;
+            }
+        }
+
         var parties = memberships
             .Where(pm => pm.Party != null)
             .Select(pm => new

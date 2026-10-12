@@ -28,12 +28,18 @@ export const WorkspaceSwitcher: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
-        const data = await res.json();
+        const data: PartyItem[] = await res.json();
         setParties(data);
-        // If current partyName isn't set but partyId exists in list, sync name
-        if (partyId && (!partyName || partyName === 'Mi Party')) {
-          const match = data.find((p: PartyItem) => p.id === partyId);
-          if (match) setParty(match.id, match.name);
+        if (data.length > 0) {
+          const currentMatch = partyId ? data.find((p: PartyItem) => p.id === partyId) : null;
+          if (currentMatch) {
+            if (!partyName || partyName === 'Mi Party' || partyName !== currentMatch.name) {
+              setParty(currentMatch.id, currentMatch.name);
+            }
+          } else {
+            // Auto-select primary party if none currently selected or unassigned
+            setParty(data[0].id, data[0].name);
+          }
         }
       }
     } catch {
