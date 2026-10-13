@@ -26,6 +26,21 @@ export const PartyActivityFeed = ({ connection }: Props) => {
       const payloadQuestId = payload?.questId || payload?.QuestId;
       const isRollback = xp < 0;
 
+      // Global check: if the feed already has an entry for this quest (optimistic or broadcast), drop duplicate
+      const existingFeed = useFeedStore.getState().feed;
+      const alreadyExists = existingFeed.some(item => 
+        (payloadQuestId && (
+          item.id === `optimistic-${payloadQuestId}` || 
+          item.id === `optimistic-rollback-${payloadQuestId}` ||
+          item.questId === payloadQuestId ||
+          item.id.includes(payloadQuestId)
+        )) ||
+        (id && item.id === id)
+      );
+      if (alreadyExists) {
+        return;
+      }
+
       const authState = useAuthStore.getState();
       const currentUserId = authState.userId;
       const currentUsername = authState.username;
@@ -35,21 +50,13 @@ export const PartyActivityFeed = ({ connection }: Props) => {
         (payloadUser && currentUsername && payloadUser.toLowerCase() === currentUsername.toLowerCase())
       );
 
-      // If completed or rolled back by current user, prevent duplicate activity item in their own panel
+      // If completed or rolled back by current user
       if (isCurrentUser) {
-        const existingFeed = useFeedStore.getState().feed;
-        const alreadyExists = existingFeed.some(item => 
-          (payloadQuestId && item.id.includes(payloadQuestId)) ||
-          item.id === id
-        );
-        if (alreadyExists) {
-          return;
-        }
-
         const questTitle = message.includes("'") ? message.split("'")[1] : 'la tarea';
         const heroName = currentUsername || payloadUser || 'Tú';
         addActivity({
           id,
+          questId: payloadQuestId,
           type: isRollback ? 'quest_rollback' : 'quest_completed',
           user: heroName,
           action: isRollback
@@ -83,6 +90,7 @@ export const PartyActivityFeed = ({ connection }: Props) => {
 
       const newItem: FeedItem = {
         id,
+        questId: payloadQuestId,
         type: isRollback ? 'quest_rollback' : 'quest_completed',
         user: allyUser,
         action: actionText,
@@ -92,11 +100,16 @@ export const PartyActivityFeed = ({ connection }: Props) => {
       addActivity(newItem);
     };
 
+    if (typeof connection.off === 'function') {
+      connection.off('NewPartyActivity');
+    }
     connection.on('NewPartyActivity', onNewActivity);
     return () => { 
-      connection.off('NewPartyActivity', onNewActivity); 
+      if (typeof connection.off === 'function') {
+        connection.off('NewPartyActivity', onNewActivity); 
+      }
     };
-  }, [connection, addActivity]);
+  }, [connection]);
 
   return (
     <div className="bg-gray-950 border border-gray-800 rounded-xl p-4 flex flex-col h-full overflow-hidden">

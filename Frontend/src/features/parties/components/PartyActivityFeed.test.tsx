@@ -119,4 +119,53 @@ describe('PartyActivityFeed', () => {
     expect(await screen.findByText('Fran')).toBeDefined();
     expect(await screen.findByText(/ha devuelto 'Auth Flow' a desarrollo \(-80 XP\)/)).toBeDefined();
   });
+
+  it('deduplicates activity when card assigned to another member already has optimistic entry in feed', () => {
+    // Sparky is logged in, but moved a card assigned to Fran
+    useAuthStore.setState({ userId: 'sparky-id', username: 'Sparky' });
+
+    // Optimistic item was added for Fran
+    useFeedStore.setState({
+      feed: [
+        {
+          id: 'optimistic-quest-fran-456',
+          questId: 'quest-fran-456',
+          type: 'quest_completed',
+          user: 'Fran',
+          action: "¡Fran ha completado 'Derrotar al Bug del Login'!",
+          time: 'Ahora'
+        }
+      ]
+    });
+
+    const listeners: Record<string, Function> = {};
+    const mockConnection = {
+      on: vi.fn((event, callback) => {
+        listeners[event] = callback;
+      }),
+      off: vi.fn()
+    };
+
+    render(
+      <I18nextProvider i18n={i18n}>
+        <PartyActivityFeed connection={mockConnection} />
+      </I18nextProvider>
+    );
+
+    // Broadcast arrives from server mentioning Fran
+    listeners['NewPartyActivity']?.({
+      id: 'broadcast-789',
+      username: 'Fran',
+      sourceUserId: 'fran-id',
+      message: "El aliado Fran completó 'Derrotar al Bug del Login'",
+      xp: 50,
+      questId: 'quest-fran-456'
+    });
+
+    // Should NOT create duplicate item - must remain exactly 1 item!
+    const feed = useFeedStore.getState().feed;
+    expect(feed.length).toBe(1);
+    expect(feed[0].user).toBe('Fran');
+    expect(feed[0].action).toBe("¡Fran ha completado 'Derrotar al Bug del Login'!");
+  });
 });

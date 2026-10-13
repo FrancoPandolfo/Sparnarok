@@ -161,6 +161,7 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
       const heroName = quest.assigneeName || username || useAuthStore.getState().username || 'Tú';
       useFeedStore.getState().addActivity({
         id: `optimistic-${id}`,
+        questId: id,
         type: 'quest_completed',
         user: heroName,
         action: `¡${heroName} ha completado '${quest.title}'!`,
@@ -173,6 +174,7 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
       const heroName = quest.assigneeName || username || useAuthStore.getState().username || 'Tú';
       useFeedStore.getState().addActivity({
         id: `optimistic-rollback-${id}`,
+        questId: id,
         type: 'quest_rollback',
         user: heroName,
         action: `La Quest '${quest.title}' ha retornado (-${rollbackXp} XP)`,
