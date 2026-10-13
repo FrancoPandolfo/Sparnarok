@@ -42,7 +42,7 @@ export const RegisterForm = () => {
       }
       
       if (data.token) {
-        setAuth(data.token, data.username || username, data.partyId, data.partyName);
+        setAuth(data.token, data.username || username, data.partyId, data.partyName, data.userId);
         navigate('/');
       } else {
         navigate('/login');

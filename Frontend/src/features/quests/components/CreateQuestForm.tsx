@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuestStore } from '../useQuestStore';
+import { usePartyMembersStore } from '../../parties/usePartyMembers';
 import { QuestDifficulty } from '../types';
 import { Sparkles, CheckCircle2, AlertCircle, X } from 'lucide-react';
 
@@ -14,13 +15,19 @@ export const CreateQuestForm = ({ onClose }: Props) => {
   const createQuest = useQuestStore(state => state.createQuest);
   const isLoading = useQuestStore(state => state.isLoading);
   const storeError = useQuestStore(state => state.error);
+  const { members, fetchMembers } = usePartyMembersStore();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [difficulty, setDifficulty] = useState<QuestDifficulty>(QuestDifficulty.D);
+  const [assigneeId, setAssigneeId] = useState('');
   const [xpReward, setXpReward] = useState(100);
   const [success, setSuccess] = useState(false);
   const [localError, setLocalError] = useState('');
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +43,7 @@ export const CreateQuestForm = ({ onClose }: Props) => {
         title: title.trim(),
         description: description.trim(),
         difficulty,
+        assigneeId: assigneeId.trim() ? assigneeId.trim() : null,
         rewards: [{ skillCategoryId: 'frontend', xpAmount: Number(xpReward) || 100 }]
       });
 
@@ -144,6 +152,25 @@ export const CreateQuestForm = ({ onClose }: Props) => {
               className="w-full bg-gray-950 border border-gray-700 text-white text-sm rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
             />
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="assigneeId" className="block text-gray-300 text-sm font-bold mb-1">
+            Héroe Asignado
+          </label>
+          <select
+            id="assigneeId"
+            value={assigneeId}
+            onChange={e => setAssigneeId(e.target.value)}
+            className="w-full bg-gray-950 border border-gray-700 text-gray-200 text-sm rounded-lg p-2.5 focus:outline-none focus:border-amber-500 transition-colors"
+          >
+            <option value="">Sin asignar (Cualquiera)</option>
+            {members.map(member => (
+              <option key={member.id} value={member.id}>
+                {member.username} ({member.role})
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="pt-2 flex justify-end gap-3">

@@ -17,6 +17,7 @@ public class Quest : IMustHaveParty
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
     public Guid? AssigneeId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public User? Assignee { get; set; }
     public List<string> Tags { get; set; } = new();
     public ICollection<QuestReward> Rewards { get; set; } = new List<QuestReward>();

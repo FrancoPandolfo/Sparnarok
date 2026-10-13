@@ -19,21 +19,27 @@ public class PartyHub : Hub
     public override async Task OnConnectedAsync()
     {
         var httpContext = Context.GetHttpContext();
-        var partyIdStr = Context.User?.FindFirst("partyId")?.Value
-                      ?? httpContext?.Request.Query["partyId"].ToString()
-                      ?? httpContext?.Request.Query["party_id"].ToString();
+        var partyIdStr = httpContext?.Request.Query["partyId"].ToString();
+        if (string.IsNullOrWhiteSpace(partyIdStr))
+        {
+            partyIdStr = httpContext?.Request.Query["party_id"].ToString();
+        }
+        if (string.IsNullOrWhiteSpace(partyIdStr))
+        {
+            partyIdStr = Context.User?.FindFirst("partyId")?.Value;
+        }
 
         if (Guid.TryParse(partyIdStr, out var partyId) && partyId != Guid.Empty)
         {
             _tenantService.SetCurrentPartyId(partyId);
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"party-{partyId}");
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"party-{partyId.ToString().ToLower()}");
         }
         else
         {
             var fallbackPartyId = _tenantService.GetCurrentPartyId();
             if (fallbackPartyId != Guid.Empty)
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"party-{fallbackPartyId}");
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"party-{fallbackPartyId.ToString().ToLower()}");
             }
         }
 
@@ -43,20 +49,26 @@ public class PartyHub : Hub
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var httpContext = Context.GetHttpContext();
-        var partyIdStr = Context.User?.FindFirst("partyId")?.Value
-                      ?? httpContext?.Request.Query["partyId"].ToString()
-                      ?? httpContext?.Request.Query["party_id"].ToString();
+        var partyIdStr = httpContext?.Request.Query["partyId"].ToString();
+        if (string.IsNullOrWhiteSpace(partyIdStr))
+        {
+            partyIdStr = httpContext?.Request.Query["party_id"].ToString();
+        }
+        if (string.IsNullOrWhiteSpace(partyIdStr))
+        {
+            partyIdStr = Context.User?.FindFirst("partyId")?.Value;
+        }
 
         if (Guid.TryParse(partyIdStr, out var partyId) && partyId != Guid.Empty)
         {
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"party-{partyId}");
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"party-{partyId.ToString().ToLower()}");
         }
         else
         {
             var fallbackPartyId = _tenantService.GetCurrentPartyId();
             if (fallbackPartyId != Guid.Empty)
             {
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"party-{fallbackPartyId}");
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"party-{fallbackPartyId.ToString().ToLower()}");
             }
         }
 
@@ -68,7 +80,7 @@ public class PartyHub : Hub
         if (Guid.TryParse(partyId, out var parsedId) && parsedId != Guid.Empty)
         {
             _tenantService.SetCurrentPartyId(parsedId);
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"party-{parsedId}");
+            await Groups.AddToGroupAsync(Context.ConnectionId, $"party-{parsedId.ToString().ToLower()}");
         }
     }
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Users, Crown, Copy, Check, Send, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ export const InviteAllyModal = ({ onClose }: Props) => {
   const partyId = useAuthStore(state => state.partyId);
   const partyName = useAuthStore(state => state.partyName);
   const token = useAuthStore(state => state.token);
+  const setParty = useAuthStore(state => state.setParty);
 
   const [inviteInput, setInviteInput] = useState('');
   const [copied, setCopied] = useState(false);
@@ -20,6 +21,21 @@ export const InviteAllyModal = ({ onClose }: Props) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [showPaywall, setShowPaywall] = useState(false);
+
+  useEffect(() => {
+    if (!partyId && token) {
+      fetch('/api/me/parties', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(res => res.ok ? res.json() : [])
+        .then(data => {
+          if (Array.isArray(data) && data.length > 0) {
+            setParty(data[0].id, data[0].name);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [partyId, token, setParty]);
 
   const handleCopyId = () => {
     if (partyId) {
@@ -31,7 +47,11 @@ export const InviteAllyModal = ({ onClose }: Props) => {
 
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!partyId || !inviteInput.trim()) return;
+    if (!inviteInput.trim()) return;
+    if (!partyId) {
+      setErrorMsg('Error crítico: No tienes una Party activa (ID no asignada). Cierra sesión y vuelve a ingresar.');
+      return;
+    }
 
     setIsLoading(true);
     setErrorMsg('');

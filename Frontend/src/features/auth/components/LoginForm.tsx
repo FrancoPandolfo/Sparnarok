@@ -29,7 +29,7 @@ export const LoginForm = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Error al iniciar sesión');
       
-      setAuth(data.token, data.username, data.partyId, data.partyName);
+      setAuth(data.token, data.username, data.partyId, data.partyName, data.userId);
       navigate('/');
     } catch (err: any) {
       setError(err.message || 'Error de conexión con el gremio');

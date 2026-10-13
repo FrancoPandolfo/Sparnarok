@@ -76,7 +76,7 @@ export const SkillTree = ({ unlockedNodeIds }: Props) => {
   }, []);
 
   return (
-    <div className="w-full h-full min-h-[600px] bg-gray-900 relative">
+    <div className="w-full h-full bg-gray-900">
       <ReactFlow
         nodes={nodes.map((n) => {
           const isUnlocked = n.data.unlocked;

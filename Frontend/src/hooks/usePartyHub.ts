@@ -30,6 +30,14 @@ export const usePartyHub = (partyId: string, token: string | null) => {
         })
         .catch(e => console.log('SignalR Connection failed: ', e));
 
+      if (typeof connection.onreconnected === 'function') {
+        connection.onreconnected(() => {
+          if (partyId && typeof connection.invoke === 'function') {
+            connection.invoke('JoinPartyGroup', partyId).catch(() => {});
+          }
+        });
+      }
+
       return () => {
         connection.stop();
       };

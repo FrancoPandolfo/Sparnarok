@@ -17,22 +17,27 @@ public class SignalRNotificationService : IRealTimeNotificationService
 
     public async Task NotifyQuestUpdatedAsync(Guid partyId, Guid questId, string newState, Guid sourceUserId)
     {
-        await _hubContext.Clients.Group($"party-{partyId}").SendAsync("QuestUpdated", new 
+        var groupName = $"party-{partyId.ToString().ToLower()}";
+        await _hubContext.Clients.Group(groupName).SendAsync("QuestUpdated", new 
         { 
-            QuestId = questId, 
-            NewState = newState, 
-            SourceUserId = sourceUserId 
+            questId = questId.ToString(), 
+            newState = newState, 
+            sourceUserId = sourceUserId.ToString() 
         });
     }
 
-    public async Task NotifyNewActivityAsync(Guid partyId, string message, int xpGained)
+    public async Task NotifyNewActivityAsync(Guid partyId, string message, int xpGained, Guid? sourceUserId = null, string? username = null, Guid? questId = null)
     {
-        await _hubContext.Clients.Group($"party-{partyId}").SendAsync("NewPartyActivity", new 
+        var groupName = $"party-{partyId.ToString().ToLower()}";
+        await _hubContext.Clients.Group(groupName).SendAsync("NewPartyActivity", new 
         {
-            Id = Guid.NewGuid(),
-            Message = message,
-            Xp = xpGained,
-            Timestamp = DateTime.UtcNow
+            id = Guid.NewGuid().ToString(),
+            message = message,
+            xp = xpGained,
+            sourceUserId = sourceUserId?.ToString(),
+            username = username,
+            questId = questId?.ToString(),
+            timestamp = DateTime.UtcNow
         });
     }
 }

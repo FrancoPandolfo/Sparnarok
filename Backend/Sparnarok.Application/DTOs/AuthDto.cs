@@ -30,6 +30,7 @@ public class AuthResultDto
 {
     public string Token { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
+    public Guid UserId { get; set; }
     public Guid PartyId { get; set; }
     public string PartyName { get; set; } = string.Empty;
 }

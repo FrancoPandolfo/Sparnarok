@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { QuestState, QuestDifficulty } from './types';
 import type { Quest, CreateQuestPayload } from './types';
 import { useAuthStore } from '../auth/useAuthStore';
+import { useFeedStore } from '../parties/useFeedStore';
 
 interface QuestStoreState {
   quests: Quest[];
@@ -10,8 +11,10 @@ interface QuestStoreState {
   error: string | null;
   tagMultipliers: Record<string, number>;
   
+  fetchQuests: () => Promise<void>;
   createQuest: (payload: CreateQuestPayload) => Promise<void>;
-  updateQuestState: (id: string, newState: QuestState, userId: string) => Promise<void>;
+  assignQuest: (id: string, assigneeId: string | null, assigneeName?: string | null) => Promise<void>;
+  updateQuestState: (id: string, newState: QuestState, userId?: string, username?: string) => Promise<void>;
   setQuestStateLocal: (id: string, newState: QuestState) => void;
   updateTagMultipliers: (multipliers: Record<string, number>) => Promise<void>;
   clearError: () => void;
@@ -48,24 +51,92 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
 
   clearError: () => set({ error: null }),
 
+  fetchQuests: async () => {
+    const token = useAuthStore.getState().token;
+    const partyId = useAuthStore.getState().partyId;
+    if (!partyId || partyId === 'party1') return;
+
+    set({ isLoading: true, error: null });
+    try {
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (partyId) headers['X-Party-Id'] = partyId;
+
+      const response = await fetch(`/api/quests?partyId=${partyId}`, { headers });
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          set({ quests: data, isLoading: false });
+          return;
+        }
+      }
+      set({ isLoading: false });
+    } catch {
+      set({ isLoading: false });
+    }
+  },
+
   updateTagMultipliers: async (multipliers: Record<string, number>) => {
     set({ tagMultipliers: multipliers });
-    // Aquí iría el fetch PUT /api/party/{partyId}/settings/multipliers
   },
 
   setQuestStateLocal: (id: string, newState: QuestState) => {
     set(state => ({
-      quests: state.quests.map(q => q.id === id ? { ...q, state: newState } : q)
+      quests: state.quests.map(q => 
+        (q.id.toLowerCase() === id.toLowerCase()) ? { ...q, state: newState } : q
+      )
     }));
   },
 
-  updateQuestState: async (id: string, newState: QuestState, userId: string) => {
+  assignQuest: async (id: string, assigneeId: string | null, assigneeName?: string | null) => {
+    set(state => ({
+      quests: state.quests.map(q =>
+        (q.id.toLowerCase() === id.toLowerCase() || q.id === id)
+          ? { ...q, assigneeId, assigneeName: assigneeName ?? null }
+          : q
+      )
+    }));
+
+    try {
+      const authState = useAuthStore.getState();
+      const token = authState.token;
+      const partyId = authState.partyId;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (partyId) headers['X-Party-Id'] = partyId;
+
+      const response = await fetch(`/api/quests/${id}/assign`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ assigneeId })
+      });
+
+      if (!response.ok) throw new Error('Error al asignar la quest');
+      const updatedQuest = await response.json();
+      if (updatedQuest && updatedQuest.id) {
+        set(state => ({
+          quests: state.quests.map(q =>
+            (q.id.toLowerCase() === id.toLowerCase() || q.id === id)
+              ? { ...q, assigneeId: updatedQuest.assigneeId, assigneeName: updatedQuest.assigneeName }
+              : q
+          )
+        }));
+      }
+    } catch {
+      // Keep optimistic update for local test/offline
+    }
+  },
+
+  updateQuestState: async (id: string, newState: QuestState, userId?: string, username?: string) => {
     const previousQuests = get().quests;
     // const previousXp = get().userXp;
-    const quest = previousQuests.find(q => q.id === id);
+    const quest = previousQuests.find(q => q.id.toLowerCase() === id.toLowerCase() || q.id === id);
     
-    let xpGained = 0;
-    if (newState === QuestState.Completed && quest && quest.state !== QuestState.Completed) {
+    let xpChange = 0;
+    const isMovingToCompleted = newState === QuestState.Completed && quest && quest.state !== QuestState.Completed;
+    const isMovingFromCompleted = quest && quest.state === QuestState.Completed && newState !== QuestState.Completed;
+
+    if (quest && (isMovingToCompleted || isMovingFromCompleted)) {
       let baseXP = quest.rewards?.reduce((acc, r) => acc + r.xpAmount, 0) || 0;
       let multiplier = 1;
       quest.tags?.forEach(tag => {
@@ -73,25 +144,62 @@ export const useQuestStore = create<QuestStoreState>((set, get) => ({
           multiplier *= get().tagMultipliers[tag];
         }
       });
-      xpGained = Math.round(baseXP * multiplier);
+      const calculatedXp = Math.round(baseXP * multiplier);
+      if (isMovingToCompleted) {
+        xpChange = calculatedXp;
+      } else if (isMovingFromCompleted) {
+        xpChange = -calculatedXp;
+      }
     }
 
     set(state => ({
-      quests: state.quests.map(q => q.id === id ? { ...q, state: newState } : q),
-      userXp: state.userXp + xpGained
+      quests: state.quests.map(q => (q.id.toLowerCase() === id.toLowerCase() || q.id === id) ? { ...q, state: newState } : q),
+      userXp: Math.max(0, state.userXp + xpChange)
     }));
+
+    if (isMovingToCompleted && quest) {
+      const heroName = quest.assigneeName || username || useAuthStore.getState().username || 'Tú';
+      useFeedStore.getState().addActivity({
+        id: `optimistic-${id}`,
+        questId: id,
+        type: 'quest_completed',
+        user: heroName,
+        action: `¡${heroName} ha completado '${quest.title}'!`,
+        time: 'Ahora'
+      });
+    }
+
+    if (isMovingFromCompleted && quest) {
+      const rollbackXp = Math.abs(xpChange);
+      const heroName = quest.assigneeName || username || useAuthStore.getState().username || 'Tú';
+      useFeedStore.getState().addActivity({
+        id: `optimistic-rollback-${id}`,
+        questId: id,
+        type: 'quest_rollback',
+        user: heroName,
+        action: `La Quest '${quest.title}' ha retornado (-${rollbackXp} XP)`,
+        time: 'Ahora'
+      });
+    }
     
     try {
-      const token = useAuthStore.getState().token;
-      const partyId = useAuthStore.getState().partyId;
+      const authState = useAuthStore.getState();
+      const token = authState.token;
+      const partyId = authState.partyId;
+      const resolvedUserId = userId || authState.userId || '';
+      const resolvedUsername = username || authState.username || '';
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       if (partyId) headers['X-Party-Id'] = partyId;
 
-      const response = await fetch(`/api/quests/${id}/status?userId=${userId}`, {
+      const response = await fetch(`/api/quests/${id}/status?userId=${resolvedUserId}`, {
         method: 'PATCH',
         headers,
-        body: JSON.stringify({ state: newState })
+        body: JSON.stringify({ 
+          state: newState,
+          username: resolvedUsername,
+          userId: resolvedUserId && resolvedUserId !== '11111111-1111-1111-1111-111111111111' ? resolvedUserId : undefined
+        })
       });
       if (!response.ok) throw new Error('API Error');
     } catch {
